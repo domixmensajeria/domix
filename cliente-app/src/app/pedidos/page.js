@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BottomNav from '../../components/BottomNav';
-import ModeSwitch from '../../components/ModeSwitch';
 import { Row, Pill, Button, Field, EmptyState, Esqueleto } from '../../components/ui';
 import { useClientSession } from '../../context/ClientSessionProvider';
 import { useAppMode } from '../../context/AppModeProvider';
@@ -64,7 +63,6 @@ export default function ActividadPage() {
       <div className="sb" style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '10px 0 104px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px 4px', animation: 'dxSube .34s cubic-bezier(.2,.8,.2,1) both' }}>
           <div style={{ font: '800 26px Manrope,sans-serif', letterSpacing: '-.035em' }}>{t('actividad.titulo')}</div>
-          <ModeSwitch compact />
         </div>
         <div style={{ padding: '0 16px 20px', font: '500 13px Manrope,sans-serif', color: 'var(--mu)' }}>
           {t('actividad.subtitulo')}

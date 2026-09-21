@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BottomNav from '../components/BottomNav';
-import ModeSwitch from '../components/ModeSwitch';
 import ThemeToggle from '../components/ThemeToggle';
 import IdiomaToggle from '../components/IdiomaToggle';
 import PedidoEnVivo from '../components/PedidoEnVivo';
@@ -92,7 +91,6 @@ export default function InicioPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, flex: 'none' }}>
             <IdiomaToggle compact />
             <ThemeToggle compact />
-            <ModeSwitch compact />
           </div>
         </div>
 

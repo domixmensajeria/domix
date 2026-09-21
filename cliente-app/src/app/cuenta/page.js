@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BottomNav from '../../components/BottomNav';
-import ModeSwitch from '../../components/ModeSwitch';
 import { Icon, Row, Field, Button, Pill, SectionTitle } from '../../components/ui';
 import { useClientSession } from '../../context/ClientSessionProvider';
 import { useTheme } from '../../context/ThemeProvider';
@@ -82,7 +81,6 @@ export default function CuentaPage() {
       <div className="sb" style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding: '10px 0 104px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px 18px', ...entra(0) }}>
           <div style={{ font: '800 26px Manrope,sans-serif', letterSpacing: '-.035em' }}>{t('cuenta.titulo')}</div>
-          <ModeSwitch compact />
         </div>
 
         <div style={{ padding: '0 16px 22px', ...entra(1) }}>
