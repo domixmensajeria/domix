@@ -7,7 +7,7 @@ out/
 .DS_Store
 
 # Token de Supabase — nunca se sube
-.supabase-token
+.supabase-token*
 
 # Archivos temporales de trabajo
 scratch_*
