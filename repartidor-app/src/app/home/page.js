@@ -5,6 +5,7 @@ import RequireSession from '../../components/RequireSession';
 import BottomNav from '../../components/BottomNav';
 import { useIdioma } from '../../context/IdiomaProvider';
 import IncomingOffer from '../../components/IncomingOffer';
+import PinEntrega from '../../components/PinEntrega';
 import MapView from '../../components/MapView';
 import ModeSwitch from '../../components/ModeSwitch';
 import { Icon, Card, HeroCard, Overline, Button, Chip, StatTile, EmptyState, Spinner, Switch } from '../../components/ui';
@@ -35,6 +36,7 @@ function HomeContent() {
   const [toggling, setToggling] = useState(false);
   const [loading, setLoading] = useState(true);
   const [perm, setPerm] = useState('default');
+  const [pinPara, setPinPara] = useState(null);
   const seen = useRef(new Map());
   const [latido, setLatido] = useState(0);
 
@@ -121,6 +123,11 @@ function HomeContent() {
       if (next === 'delivered') pushNotify(t('inicio.entregaCompletada'), { body: t('inicio.sumadosATuDia', { monto: money(req.price) }), tag: `fin-${req.id}` });
       return;
     }
+    // El último paso no se hace con un toque: sin el PIN que dicta el
+    // cliente, cualquiera podría marcar "entregado" sin haber entregado
+    // nada. Esta pantalla tenía ese atajo suelto — la de Entregas ya lo
+    // hacía bien, aquí se une al mismo candado.
+    if (next === 'delivered') return setPinPara(req);
     const { error } = await updateRequestStatus(req.id, next);
     if (!error) loadLive();
   };
@@ -324,6 +331,14 @@ function HomeContent() {
             seen.current.set(offer.id, Date.now() + RECHAZO_MS);
             setOffer(null);
           }}
+        />
+      )}
+
+      {pinPara && (
+        <PinEntrega
+          request={pinPara}
+          onClose={() => setPinPara(null)}
+          onConfirmado={() => { setPinPara(null); loadLive(); }}
         />
       )}
 

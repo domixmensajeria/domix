@@ -8,12 +8,16 @@
  * lentos en Buenaventura, esa diferencia es que la app abra o no.
  *
  * El riesgo de recortar es que un icono que quedó fuera se ve como una
- * caja vacía. Por eso no se busca sólo donde "parece" que hay iconos:
- * se recogen todas las cadenas del código con forma de nombre de icono
- * y se cruzan con la lista oficial de Google. Sobran algunas (palabras
- * como "search" o "error" que también son variables), y está bien: cada
- * icono de más cuesta unos cien bytes, y una caja vacía cuesta la cara
- * de la app.
+ * caja vacía — o peor, como su nombre en texto crudo encima de otra
+ * cosa (pasó con el reloj falso del marco de teléfono: los iconos de
+ * señal/wifi/batería van como texto plano entre etiquetas, no entre
+ * comillas, y la primera versión de este script solo miraba cadenas
+ * con comillas). Por eso ahora se recoge CUALQUIER palabra del código
+ * con forma de nombre de icono — entre comillas o no — y se cruza con
+ * la lista oficial de Google. Sobran muchas (nombres de variables,
+ * palabras sueltas), y está bien: cada icono de más cuesta unos cien
+ * bytes, y un nombre de icono roto en pantalla cuesta la cara de la
+ * app.
  *
  * Hay que volver a correrlo cuando se agreguen iconos nuevos.
  */
@@ -50,7 +54,7 @@ for (const app of APPS) {
   const candidatas = new Set();
   for (const archivo of archivosJs(join(RAIZ, app, 'src'))) {
     const texto = readFileSync(archivo, 'utf8');
-    for (const m of texto.matchAll(/['"]([a-z][a-z0-9_]{2,})['"]/g)) candidatas.add(m[1]);
+    for (const m of texto.matchAll(/[a-z][a-z0-9_]{2,}/g)) candidatas.add(m[0]);
   }
 
   const iconos = [...candidatas].filter((c) => oficiales.has(c)).sort();
