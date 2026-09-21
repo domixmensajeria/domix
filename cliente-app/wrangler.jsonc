@@ -1,0 +1,23 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+
+  // El nombre decide el dominio temporal gratis:
+  // domix-cliente.<tu-subdominio>.workers.dev
+  "name": "domix-cliente",
+
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": [
+    "nodejs_compat",
+    // Sin esto, process.env.MI_VARIABLE llega vacío en el Worker aunque
+    // la variable esté puesta en el dashboard — hay que declararlo
+    // aparte de "nodejs_compat".
+    "nodejs_compat_populate_process_env",
+    "global_fetch_strictly_public"
+  ],
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  }
+}

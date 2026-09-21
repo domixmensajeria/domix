@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+
+  // El nombre decide el dominio temporal gratis:
+  // domix-panel.<tu-subdominio>.workers.dev
+  "name": "domix-panel",
+
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": [
+    "nodejs_compat",
+    // Este panel sí lo necesita de verdad: /api/whatsapp, /api/responder
+    // y /api/leer-chat leen ANTHROPIC_API_KEY y las credenciales de Meta
+    // con process.env.*. Sin este flag llegarían undefined en el Worker
+    // aunque las variables estén puestas en el dashboard de Cloudflare.
+    "nodejs_compat_populate_process_env",
+    "global_fetch_strictly_public"
+  ],
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  }
+}

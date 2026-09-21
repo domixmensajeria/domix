@@ -5,3 +5,9 @@ out/
 .env*.local
 *.log
 .DS_Store
+
+# Adaptador de Cloudflare — igual que .next/, es una salida de build,
+# no algo que se versione.
+.open-next/
+.wrangler/
+.dev.vars

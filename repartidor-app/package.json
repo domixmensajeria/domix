@@ -6,17 +6,23 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "cf:build": "cross-env CF_BUILD=1 opennextjs-cloudflare build",
+    "cf:preview": "cross-env CF_BUILD=1 opennextjs-cloudflare preview",
+    "cf:deploy": "cross-env CF_BUILD=1 opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.112.1",
-    "next": "15.1.0",
+    "next": "15.1.12",
     "react": "19.0.0",
     "react-dom": "19.0.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "1.18.1",
+    "cross-env": "10.1.0",
     "eslint": "^9",
-    "eslint-config-next": "15.1.0"
+    "eslint-config-next": "15.1.12",
+    "wrangler": "4.136.1"
   }
 }
