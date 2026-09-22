@@ -11,3 +11,4 @@ out/
 
 # Archivos temporales de trabajo
 scratch_*
+.cloudflare-token*

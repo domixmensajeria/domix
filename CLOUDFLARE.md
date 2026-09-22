@@ -1,10 +1,15 @@
-# Desplegar Domix en Cloudflare Workers (dominios temporales)
+# Desplegar Domix en Cloudflare Workers
 
-Esto es aparte de EasyPanel — las dos formas de desplegar conviven sin
-pisarse, porque `next.config.mjs` apaga el modo Docker (`standalone`)
-solo cuando se construye para Cloudflare.
+Stack completo e independiente, sin nada compartido con el desarrollo
+anterior:
 
-Cada Worker recibe gratis un dominio de prueba:
+| Pieza | Cuenta / proyecto |
+|---|---|
+| Código | [github.com/domixmensajeria/domix](https://github.com/domixmensajeria/domix) (privado) |
+| Base de datos | Supabase, proyecto "Domix Mensajería" (`pwgofasontumxgzahuph`), org Domix, São Paulo |
+| Hosting | Cloudflare, cuenta `domixmensajeriasas@gmail.com` |
+
+Cada Worker recibe gratis un dominio de prueba, sin comprar nada:
 
 | App | Nombre del Worker | Dominio temporal |
 |---|---|---|
@@ -12,35 +17,34 @@ Cada Worker recibe gratis un dominio de prueba:
 | Repartidor | `domix-repartidor` | `domix-repartidor.<tu-subdominio>.workers.dev` |
 | Panel | `domix-panel` | `domix-panel.<tu-subdominio>.workers.dev` |
 
-`<tu-subdominio>` es el que Cloudflare te asignó la primera vez que
-entraste a Workers & Pages — se ve en el propio dashboard.
+`<tu-subdominio>` es el que Cloudflare asignó a la cuenta la primera
+vez que se entró a Workers & Pages — se ve en el propio dashboard.
 
 ## Por qué por el dashboard y no por la terminal
 
-Probé desplegar desde aquí con la CLI (`wrangler`). El adaptador de
-Cloudflare (`@opennextjs/cloudflare`) necesita un binario nativo
-(`@ast-grep/napi`) para reescribir por dentro el paquete de Next.js, y
-en este Windows específico ese binario no carga (`ERR_DLOPEN_FAILED` —
-casi siempre falta el runtime de Visual C++, no es un problema del
-código ni de la configuración). No vale la pena perseguirlo: **el
-dashboard de Cloudflare compila en sus propios servidores Linux**, así
-que esa rareza de esta máquina no te afecta allá. Es además la misma
-forma en que ya despliegas en EasyPanel — conectar el repo y dejar que
-la plataforma construya — así que no cambia tu flujo de trabajo.
+El adaptador de Cloudflare (`@opennextjs/cloudflare`) necesita un
+binario nativo (`@ast-grep/napi`) para reescribir por dentro el
+paquete de Next.js, y en este Windows específico ese binario no carga
+(`ERR_DLOPEN_FAILED` — casi siempre falta el runtime de Visual C++, no
+es un problema del código ni de la configuración). No vale la pena
+perseguirlo: **el dashboard de Cloudflare compila en sus propios
+servidores Linux**, así que esa rareza de esta máquina no aplica allá.
 
 ## 1. Migraciones de Supabase
 
-Si ya las corriste para EasyPanel, este paso ya está — es la misma
-base de datos para las dos formas de desplegar.
+Ya corridas — las 9 migraciones están aplicadas en el proyecto nuevo.
+Si algún día hace falta rehacerlo desde cero, `database/aplicar_nuevo.sh`
+corre cualquier archivo `.sql` contra este proyecto (lee el token de
+`.supabase-token-nuevo`, que nunca se sube a git).
 
 ## 2. Conectar cada app (repetir 3 veces)
 
-En el dashboard de Cloudflare: **Workers & Pages → Create → Workers →
-Import a repository** (o **Connect to Git** si ya existe el Worker).
-Autoriza el acceso a `sophieaitech/domix` si no lo has hecho antes.
+En el dashboard de Cloudflare, con la cuenta `domixmensajeriasas@gmail.com`:
+**Workers & Pages → Create → Workers → Import a repository**.
+Autoriza el acceso a `domixmensajeria/domix` la primera vez.
 
-Para cada una de las tres, la app vive en una subcarpeta del mismo
-repositorio, así que hay que decírselo explícitamente:
+Las tres apps viven en subcarpetas del mismo repositorio, así que hay
+que decírselo explícitamente:
 
 | Campo | Cliente | Repartidor | Panel |
 |---|---|---|---|
@@ -51,20 +55,24 @@ repositorio, así que hay que decírselo explícitamente:
 
 Con eso, cada `git push` a `master` reconstruye y redespliega solo.
 
-## 3. Variables — la misma regla que en EasyPanel, invertida
+## 3. Variables de entorno
 
 Las `NEXT_PUBLIC_*` se incrustan en el bundle **durante el build**, así
 que van como variables normales del proyecto (pestaña *Variables and
-Secrets*, tipo *Text*), no como secreto — ya son públicas de por sí:
+Secrets*, tipo *Text*) — son las del proyecto nuevo de Supabase, no las
+de ningún desarrollo anterior:
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://TU-PROYECTO.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-llave-publica
+NEXT_PUBLIC_SUPABASE_URL=https://pwgofasontumxgzahuph.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<la anon key del proyecto nuevo>
 ```
 
-Las del panel que sí son secretas van como *Secret* en esa misma
-pestaña — Cloudflare las inyecta en cada request, nunca quedan en el
-código construido:
+(La anon key completa está en el `.env.local` de cada app, en este
+mismo equipo — no se repite aquí porque este archivo sí queda en git.)
+
+Las del panel que son secretas van como *Secret* en esa misma pestaña
+— Cloudflare las inyecta en cada request, nunca quedan en el código
+construido:
 
 ```
 ANTHROPIC_API_KEY=...
@@ -81,21 +89,30 @@ llegan solas a `process.env` — hace falta el flag de compatibilidad
 tienes que hacer nada más aquí; solo entra si algún día borras o
 reescribes ese archivo.
 
-## 4. WhatsApp
+## 4. Cuentas para entrar y probar
 
-Igual que con EasyPanel: el webhook necesita URL pública para
-configurarse en Meta, así que ese paso va después de que el primer
-build del panel esté arriba:
+Sembradas en el proyecto nuevo de Supabase, base limpia en ceros:
+
+| App | Usuario |
+|---|---|
+| Panel | `admin@domix.co` / `domix2026` |
+| Repartidor | `+573157924906` (Yeison Mosquera) / `yeison123` |
+| Cliente | Sin login — así se diseñó a propósito |
+
+## 5. WhatsApp
+
+El webhook necesita URL pública para configurarse en Meta, así que ese
+paso va después de que el primer build del panel esté arriba:
 
 ```
 https://domix-panel.<tu-subdominio>.workers.dev/api/whatsapp
 ```
 
-## 5. Verificar
+## 6. Verificar
 
 Entra al dominio temporal de cada Worker. El de más cuidado es el
-panel: entra con `admin@domix.co`, confirma que el Dashboard carga
-pedidos reales y no "No hay conexión" — si sale eso, casi siempre es
+panel: entra con `admin@domix.co`, confirma que el Dashboard carga (en
+ceros, es normal) y no "No hay conexión" — si sale eso, casi siempre es
 que faltó una `NEXT_PUBLIC_*` en el build de esa app puntual.
 
 ## Cuando quieras un dominio propio en vez del temporal
