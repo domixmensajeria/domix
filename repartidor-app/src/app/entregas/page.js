@@ -7,7 +7,6 @@ import { useIdioma } from '../../context/IdiomaProvider';
 import { Icon, Card, Overline, Button, Chip, EmptyState } from '../../components/ui';
 import { useCourierSession } from '../../context/CourierSessionProvider';
 import { useAppMode } from '../../context/AppModeProvider';
-import ModeSwitch from '../../components/ModeSwitch';
 import PinEntrega from '../../components/PinEntrega';
 import { fetchCourierDeliveries, updateRequestStatus, serviceLabel, SERVICE_ICON } from '../../lib/serviceRequests';
 
@@ -29,7 +28,7 @@ const NEXT_ICON = { assigned: 'inventory', picked_up: 'navigation', in_progress:
 const FILTERS = [
   { id: 'activos', clave: 'activos', match: (s) => ['assigned', 'picked_up', 'in_progress'].includes(s) },
   { id: 'entregados', clave: 'entregados', match: (s) => s === 'delivered' },
-  { id: 'todos', label: 'Todos', match: () => true },
+  { id: 'todos', clave: 'todos', match: () => true },
 ];
 
 function EntregasContent() {
@@ -72,7 +71,6 @@ function EntregasContent() {
       <header className="dx-topbar" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 12 }}>
         <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span className="dsp" style={{ fontWeight: 800, fontSize: 25 }}>{t('entregas.titulo')}</span>
-          <ModeSwitch compact />
         </span>
 
         <span style={{ display: 'flex', alignItems: 'center', gap: 10, height: 48, padding: '0 15px', borderRadius: 'var(--sh-full)', background: 'var(--surface-container)' }}>

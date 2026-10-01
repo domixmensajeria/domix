@@ -7,7 +7,6 @@ import { useIdioma } from '../../context/IdiomaProvider';
 import IncomingOffer from '../../components/IncomingOffer';
 import PinEntrega from '../../components/PinEntrega';
 import MapView from '../../components/MapView';
-import ModeSwitch from '../../components/ModeSwitch';
 import { Icon, Card, HeroCard, Overline, Button, Chip, StatTile, EmptyState, Spinner, Switch } from '../../components/ui';
 import { useCourierSession } from '../../context/CourierSessionProvider';
 import { useAppMode } from '../../context/AppModeProvider';
@@ -159,7 +158,6 @@ function HomeContent() {
             {courierProfile?.work_zone || 'Centro'}
           </div>
         </div>
-        <span style={{ flex: 'none' }}><ModeSwitch compact /></span>
       </header>
 
       <div className="dx-page sc">

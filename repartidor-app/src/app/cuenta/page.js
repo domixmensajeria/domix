@@ -8,7 +8,6 @@ import { useCourierSession } from '../../context/CourierSessionProvider';
 import { useAppMode } from '../../context/AppModeProvider';
 import { useTheme } from '../../context/ThemeProvider';
 import { useIdioma } from '../../context/IdiomaProvider';
-import ModeSwitch from '../../components/ModeSwitch';
 import ThemeToggle from '../../components/ThemeToggle';
 import IdiomaToggle from '../../components/IdiomaToggle';
 import HojaDocumento from '../../components/HojaDocumento';
@@ -92,7 +91,6 @@ function CuentaContent() {
         <span className="dsp" style={{ fontWeight: 800, fontSize: 25 }}>{t('cuenta.titulo')}</span>
         <IdiomaToggle compact />
         <ThemeToggle compact />
-        <ModeSwitch compact />
       </header>
 
       <div className="dx-page sc">

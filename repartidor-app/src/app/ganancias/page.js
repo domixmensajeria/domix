@@ -6,7 +6,6 @@ import BottomNav from '../../components/BottomNav';
 import { Icon, Card, HeroCard, Overline, StatTile, EmptyState, Button } from '../../components/ui';
 import { useCourierSession } from '../../context/CourierSessionProvider';
 import { useAppMode } from '../../context/AppModeProvider';
-import ModeSwitch from '../../components/ModeSwitch';
 import { useIdioma } from '../../context/IdiomaProvider';
 import HojaRetiro from '../../components/HojaRetiro';
 import { fetchWeekEarnings, serviceLabel, SERVICE_ICON } from '../../lib/serviceRequests';
@@ -74,7 +73,6 @@ function GananciasContent() {
     <>
       <header className="dx-topbar" style={{ justifyContent: 'space-between' }}>
         <span className="dsp" style={{ fontWeight: 800, fontSize: 25 }}>{t('ganancias.titulo')}</span>
-        <ModeSwitch compact />
       </header>
 
       <div className="dx-page sc">

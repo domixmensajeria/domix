@@ -1,33 +1,21 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext } from 'react';
 
-const KEY = 'domix_mode';
 const AppModeContext = createContext(null);
 
-/* DEMO: operación simulada, con métricas e historial para mostrar el sistema.
-   EN VIVO: solo datos reales de Supabase (arranca en ceros). */
-export function AppModeProvider({ children, defaultMode = 'demo' }) {
-  const [mode, setMode] = useState(defaultMode);
-  const [ready, setReady] = useState(false);
+/* Un repartidor entrega paquetes reales a direcciones reales — no hay
+   lugar para datos de prueba aquí. Por eso, a diferencia del panel
+   (donde Demo sigue sirviendo para que el dueño del negocio vea el
+   sistema sin necesitar pedidos reales), esta app no tiene interruptor:
+   siempre opera en vivo, contra Supabase.
 
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(KEY);
-      if (saved === 'demo' || saved === 'live') setMode(saved);
-    } catch { /* almacenamiento no disponible */ }
-    setReady(true);
-  }, []);
-
-  const changeMode = useCallback((next) => {
-    setMode(next);
-    try { localStorage.setItem(KEY, next); } catch { /* ignorar */ }
-  }, []);
-
-  const toggleMode = useCallback(() => changeMode(mode === 'demo' ? 'live' : 'demo'), [mode, changeMode]);
-
+   Se deja el mismo contrato (`isDemo`, `isLive`, `ready`) para que el
+   resto del código —que ya sabía manejar los dos modos— no tenga que
+   tocarse: simplemente toma siempre la rama en vivo. */
+export function AppModeProvider({ children }) {
   return (
-    <AppModeContext.Provider value={{ mode, isDemo: mode === 'demo', isLive: mode === 'live', ready, changeMode, toggleMode }}>
+    <AppModeContext.Provider value={{ mode: 'live', isDemo: false, isLive: true, ready: true }}>
       {children}
     </AppModeContext.Provider>
   );
