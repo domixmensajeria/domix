@@ -252,9 +252,7 @@ export default function BandejaPage() {
           <EmptyState
             icon="chat"
             title="Sin conversaciones"
-            body={isDemo
-              ? 'Cambia a Demo para ver ejemplos.'
-              : 'Cuando conectes el número de WhatsApp Business, los mensajes de los clientes aparecerán aquí.'}
+            body="Cuando conectes el número de WhatsApp Business, los mensajes de los clientes aparecerán aquí."
           />
         )}
 

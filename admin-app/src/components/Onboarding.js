@@ -11,7 +11,7 @@ const STEPS = [
   {
     icon: 'waving_hand',
     title: 'Bienvenido al panel de Domix',
-    body: 'Desde aquí controlas toda la operación de Mensajería & Logística: pedidos que entran, repartidores en la calle y el dinero del día. Arrancas en Modo Demo, con datos de prueba para que lo recorras sin miedo.',
+    body: 'Desde aquí controlas toda la operación de Mensajería & Logística: pedidos que entran, repartidores en la calle y el dinero del día. Todo lo que ves aquí es real: lo que entra por la app de clientes aparece en segundos.',
     tint: 'var(--primary-container)',
     fg: 'var(--on-primary-container)',
   },

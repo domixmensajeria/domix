@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { Icon, Button } from './ui';
-import ModeSwitch from './ModeSwitch';
 import ThemeToggle from './ThemeToggle';
 import IdiomaToggle from './IdiomaToggle';
 import { useIdioma } from '../context/IdiomaProvider';
@@ -70,7 +69,6 @@ export default function TopBar({ title, subtitle, actions, onSearch, searchPlace
           )}
         </button>
 
-        <ModeSwitch compact />
       </div>
 
       {/* Fila del título + acciones de la pantalla */}

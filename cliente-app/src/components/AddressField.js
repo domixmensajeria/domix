@@ -23,6 +23,7 @@ export default function AddressField({ label, icon = 'location_on', placeholder,
   useEffect(() => { setRecientes(leerRecientes()); }, []);
   const timer = useRef(null);
   const controller = useRef(null);
+  const secuencia = useRef(0);
 
   useEffect(() => { setText(value || ''); }, [value]);
 
@@ -44,13 +45,16 @@ export default function AddressField({ label, icon = 'location_on', placeholder,
     if (v.trim().length < 3) return setBusy(false);
 
     setBusy(true);
+    const mio = ++secuencia.current;
     timer.current = setTimeout(async () => {
       controller.current = new AbortController();
       const res = await searchAddress(v, { signal: controller.current.signal });
+      // Una búsqueda cancelada o ya superada no puede pisar a la vigente.
+      if (res === null || mio !== secuencia.current) return;
       setItems(res);
       setOpen(true);
       setBusy(false);
-    }, 260);
+    }, 420);
   };
 
   const choose = (item) => {
@@ -151,10 +155,10 @@ export default function AddressField({ label, icon = 'location_on', placeholder,
                 fill={it.local}
               />
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: 'block', fontSize: 12.5, fontWeight: 600, lineHeight: 1.35 }}>{it.label}</span>
+                <span style={{ display: 'block', fontSize: 12.5, fontWeight: 600, lineHeight: 1.35 }}>{it.libre ? `Usar «${it.label}»` : it.label}</span>
                 {it.requierePin && (
                   <span style={{ display: 'block', fontSize: 10.5, fontWeight: 700, color: 'var(--secondary)', marginTop: 2 }}>
-                    Marca el punto en el mapa
+                    {it.libre ? 'Tal como la escribí — marco el punto en el mapa' : 'Marca el punto en el mapa'}
                   </span>
                 )}
               </span>
