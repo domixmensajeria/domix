@@ -65,7 +65,7 @@ begin
   values (
     r.service_type, r.contact_name, r.contact_phone, r.description, r.pickup_address, r.dropoff_address,
     r.pickup_lat, r.pickup_lon, r.dropoff_lat, r.dropoff_lon, r.distance_km, r.price, r.price_breakdown,
-    r.max_budget, r.payment_method, coalesce(r.turbo, false), r.eta_minutes, coalesce(r.source, 'web'), r.branch_id,
+    r.max_budget, coalesce(r.payment_method, 'cash'), coalesce(r.turbo, false), r.eta_minutes, coalesce(r.source, 'app'), r.branch_id,
     coalesce(r.tip, 0), 'requested', false)
   returning * into r;
   return r;
