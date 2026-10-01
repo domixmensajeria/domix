@@ -31,7 +31,7 @@ export const STATUS_STEPS = [
 ];
 
 export async function createRequest(payload) {
-  return supabase.from('service_requests').insert(payload).select().single();
+  return supabase.rpc('crear_solicitud', { p: payload });
 }
 
 export async function trackRequest(code) {
@@ -42,12 +42,7 @@ export async function trackRequest(code) {
 
 export async function fetchMyRequests(phone) {
   if (!phone) return [];
-  const { data, error } = await supabase
-    .from('service_requests')
-    .select('*')
-    .eq('contact_phone', phone)
-    .order('created_at', { ascending: false })
-    .limit(30);
+  const { data, error } = await supabase.rpc('mis_pedidos', { p_phone: phone });
   if (error) throw error;
   return data || [];
 }

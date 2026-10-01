@@ -122,9 +122,12 @@ export function OpsProvider({ children }) {
       },
     });
 
-    /* Red de seguridad por si se pierde algún aviso. Con el tiempo real
-       funcionando no hace falta más seguido. */
-    const t = setInterval(loadLive, 60000);
+    /* Con la seguridad por rol, el canal en vivo no lleva la sesión del
+       panel y la base no le entrega filas: el panel se mantiene al día
+       consultando cada pocos segundos (solo con la pestaña visible). */
+    const t = setInterval(() => {
+      if (typeof document === 'undefined' || document.visibilityState === 'visible') loadLive();
+    }, 8000);
     return () => {
       stop();
       clearInterval(t);
