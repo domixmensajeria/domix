@@ -11,12 +11,13 @@ Estado: las tres apps en producción (domixmensajeria.com, app.…, admin.…) s
 
 ## Pendiente / riesgos conocidos
 1. **Rotar credenciales**: los tokens de Supabase y Cloudflare pegados en el chat deben revocarse; cambiar la clave de prueba `domix2026` antes del uso real.
-2. **WhatsApp**: sin credenciales de Meta/Anthropic. Con RLS cerrada, la ruta `/api/whatsapp` necesita el secreto `SUPABASE_SERVICE_ROLE_KEY` en el Worker admin. La bandeja en vivo no se actualiza sola (falta sondeo).
-3. **Storage**: cualquier repartidor con sesión puede leer documentos de otro si conoce la ruta (policy por rol, no por dueño).
+2. **WhatsApp**: sin credenciales de Meta/Anthropic. Con RLS cerrada, la ruta `/api/whatsapp` necesita el secreto `SUPABASE_SERVICE_ROLE_KEY` en el Worker admin. La bandeja se refresca por sondeo cada 8 s.
 4. `mis_pedidos` se consulta solo con el teléfono (igual que antes); quien conozca un teléfono ve sus pedidos.
-5. Precio calculado en el navegador del cliente; el servidor lo acepta. Conviene recalcularlo en `crear_solicitud`.
 6. GPS nunca probado en un teléfono real.
 7. DESPLIEGUE.md (EasyPanel) quedó obsoleto; CLOUDFLARE.md menciona nombres de Workers antiguos.
+
+## Migración 12
+Documentos: cada repartidor solo sube/lee su carpeta (probado). `crear_solicitud` rechaza precios por debajo del piso por distancia. Docs de despliegue actualizados.
 
 ## Marcha atrás
 `database/migracion_11_rollback.sql` restaura el acceso abierto.

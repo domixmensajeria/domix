@@ -13,9 +13,9 @@ Cada Worker recibe gratis un dominio de prueba, sin comprar nada:
 
 | App | Nombre del Worker | Dominio temporal |
 |---|---|---|
-| Cliente | `domix-cliente` | `domix-cliente.<tu-subdominio>.workers.dev` |
-| Repartidor | `domix-repartidor` | `domix-repartidor.<tu-subdominio>.workers.dev` |
-| Panel | `domix-panel` | `domix-panel.<tu-subdominio>.workers.dev` |
+| Cliente | `cliente` | `cliente.<tu-subdominio>.workers.dev` |
+| Repartidor | `repartidor` | `repartidor.<tu-subdominio>.workers.dev` |
+| Panel | `admin` | `admin.<tu-subdominio>.workers.dev` |
 
 `<tu-subdominio>` es el que Cloudflare asignó a la cuenta la primera
 vez que se entró a Workers & Pages — se ve en el propio dashboard.
@@ -48,7 +48,7 @@ que decírselo explícitamente:
 
 | Campo | Cliente | Repartidor | Panel |
 |---|---|---|---|
-| Nombre del Worker | `domix-cliente` | `domix-repartidor` | `domix-panel` |
+| Nombre del Worker | `cliente` | `repartidor` | `admin` |
 | Root directory | `cliente-app` | `repartidor-app` | `admin-app` |
 | Build command | `npm install && npm run cf:build` | igual | igual |
 | Deploy command | `npx wrangler deploy` | igual | igual |
@@ -105,7 +105,7 @@ El webhook necesita URL pública para configurarse en Meta, así que ese
 paso va después de que el primer build del panel esté arriba:
 
 ```
-https://domix-panel.<tu-subdominio>.workers.dev/api/whatsapp
+https://admin.<tu-subdominio>.workers.dev/api/whatsapp
 ```
 
 ## 6. Verificar

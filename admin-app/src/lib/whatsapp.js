@@ -78,5 +78,10 @@ export function suscribirBandeja(onCambio) {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_messages' }, onCambio)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'whatsapp_conversations' }, onCambio)
     .subscribe();
-  return () => supabase.removeChannel(canal);
+  /* El canal en vivo no lleva la sesión del panel (seguridad por rol):
+     la bandeja se refresca sola cada pocos segundos. */
+  const t = setInterval(() => {
+    if (typeof document === 'undefined' || document.visibilityState === 'visible') onCambio();
+  }, 8000);
+  return () => { clearInterval(t); supabase.removeChannel(canal); };
 }

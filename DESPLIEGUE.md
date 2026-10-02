@@ -1,3 +1,5 @@
+> **Obsoleto**: Domix ya no se despliega con EasyPanel. Ver CLOUDFLARE.md.
+
 # Desplegar Domix en EasyPanel
 
 Tres aplicaciones, tres servicios, una sola base de datos en Supabase.
