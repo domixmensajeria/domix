@@ -19,5 +19,11 @@ Estado: las tres apps en producción (domixmensajeria.com, app.…, admin.…) s
 ## Migración 12
 Documentos: cada repartidor solo sube/lee su carpeta (probado). `crear_solicitud` rechaza precios por debajo del piso por distancia. Docs de despliegue actualizados.
 
+## GPS (migración 13)
+App del repartidor: descarta posiciones con precisión peor a 150 m, publica si pasaron 5 s y se movió >8 m (o cada 20 s), mantiene la pantalla activa (Wake Lock) y avisa si el permiso está denegado, sin señal o es impreciso (verificado en producción: el aviso aparece). Política lista para guardar historial de ruta (`tracking_points`), aún sin escribir desde la app. Sigue faltando probarlo en un teléfono real en movimiento.
+
+## Revisión de base de datos (1 oct)
+2 repartidores + 1 admin, 0 pedidos, todas las tablas con RLS, sin datos demo, sin huérfanos (perfiles sin clave, repartidores sin perfil, pedidos sin PIN).
+
 ## Marcha atrás
 `database/migracion_11_rollback.sql` restaura el acceso abierto.
