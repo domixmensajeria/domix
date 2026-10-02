@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState, useCallback, useRef } f
 import { supabase } from '../lib/supabaseClient';
 import { useAppMode } from './AppModeProvider';
 import { buildDemoData, demoCourierProfile, makeIncomingRequest, DEMO_COURIERS } from '../lib/demo';
-import { watchPosition } from '../lib/geo';
+import { watchPosition, haversineKm } from '../lib/geo';
 
 const KEY = 'domix_courier_id';
 const CourierSessionContext = createContext(null);
@@ -18,6 +18,7 @@ export function CourierSessionProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [demoRequests, setDemoRequests] = useState([]);
   const positionStop = useRef(null);
+  const [gpsEstado, setGpsEstado] = useState('inactivo');
 
   /* ---------- Modo DEMO: perfil y operación simulada ---------- */
   useEffect(() => {
@@ -95,13 +96,21 @@ export function CourierSessionProvider({ children }) {
       positionStop.current = null;
       return;
     }
+    /* Se publica si pasaron 5 s y se movió más de 8 m, o cada 20 s como
+       señal de vida. Así el mapa del cliente se mueve sin saturar la base. */
+    let ultimo = { lat: null, lon: null, t: 0 };
     positionStop.current = watchPosition(async ({ lat, lon, heading }) => {
       setCourierProfile((c) => (c ? { ...c, last_lat: lat, last_lon: lon } : c));
       if (isDemo || courierId.startsWith('demo-')) return;
+      const ahora = Date.now();
+      const metros = ultimo.lat == null ? Infinity : haversineKm({ lat, lon }, { lat: ultimo.lat, lon: ultimo.lon }) * 1000;
+      const dt = ahora - ultimo.t;
+      if (!((dt >= 5000 && metros >= 8) || dt >= 20000)) return;
+      ultimo = { lat, lon, t: ahora };
       await supabase.from('courier_profiles')
         .update({ last_lat: lat, last_lon: lon, heading: heading ?? null, last_seen_at: new Date().toISOString() })
         .eq('id', courierId);
-    });
+    }, setGpsEstado);
     return () => { positionStop.current?.(); positionStop.current = null; };
   }, [courierProfile?.status, courierId, isDemo]);
 
@@ -138,7 +147,7 @@ export function CourierSessionProvider({ children }) {
       value={{
         courierId,
         session: courierId ? { user: { id: courierId } } : courierId === null ? null : undefined,
-        profile, courierProfile, loading,
+        profile, courierProfile, loading, gpsEstado,
         selectCourier, setOnlineStatus, signOut,
         demoRequests, demoAccept, demoAdvance, demoInject,
         reload: () => (courierId && !courierId.startsWith('demo-') ? loadReal(courierId) : null),

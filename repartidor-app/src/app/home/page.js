@@ -26,7 +26,7 @@ const CLAVE_SIGUIENTE = { assigned: 'yaLoRecogi', picked_up: 'voyEnCamino', in_p
 
 function HomeContent() {
   const { t } = useIdioma();
-  const { profile, courierProfile, setOnlineStatus, courierId, demoRequests, demoAccept, demoAdvance, demoInject } = useCourierSession();
+  const { profile, courierProfile, gpsEstado, setOnlineStatus, courierId, demoRequests, demoAccept, demoAdvance, demoInject } = useCourierSession();
   const { isDemo } = useAppMode();
 
   const [live, setLive] = useState([]);
@@ -185,6 +185,13 @@ function HomeContent() {
             </span>
             <Switch checked={isOnline} onChange={toggle} disabled={toggling} />
           </div>
+
+          {isOnline && ['denegado', 'sin-senal', 'no-soportado', 'impreciso'].includes(gpsEstado) && (
+            <div role="alert" style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 12, padding: '10px 12px', borderRadius: 'var(--sh-sm)', background: 'rgba(255,170,60,.18)', fontSize: 12, fontWeight: 700 }}>
+              <Icon name="location_off" size={18} fill color="#FFC46B" />
+              <span>{t('inicio.gps_' + gpsEstado)}</span>
+            </div>
+          )}
 
           {/* Resumen del turno, en la misma tarjeta */}
           <div style={{ display: 'flex', marginTop: 14, paddingTop: 14, borderTop: '1px solid rgba(255,255,255,.13)' }}>

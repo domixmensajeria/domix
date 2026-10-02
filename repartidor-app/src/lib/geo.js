@@ -82,14 +82,40 @@ export function currentPosition({ timeout = 8000 } = {}) {
   });
 }
 
-export function watchPosition(onUpdate, onError) {
-  if (typeof navigator === 'undefined' || !navigator.geolocation) return () => {};
+/* GPS del repartidor. Entrega solo posiciones fiables (precisión de 150 m
+   o mejor), avisa del estado del permiso y mantiene la pantalla activa
+   para que el sistema no duerma el seguimiento mientras trabaja. */
+export function watchPosition(onUpdate, onEstado) {
+  if (typeof navigator === 'undefined' || !navigator.geolocation) {
+    onEstado?.('no-soportado');
+    return () => {};
+  }
+  let wake = null;
+  const pedirWake = async () => {
+    try { if (navigator.wakeLock && document.visibilityState === 'visible') wake = await navigator.wakeLock.request('screen'); } catch { /* ignorar */ }
+  };
+  const alVolver = () => { if (document.visibilityState === 'visible') pedirWake(); };
+  document.addEventListener('visibilitychange', alVolver);
+  pedirWake();
+
   const id = navigator.geolocation.watchPosition(
-    (p) => onUpdate({ lat: p.coords.latitude, lon: p.coords.longitude, heading: p.coords.heading }),
-    onError,
-    { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+    (p) => {
+      if (p.coords.accuracy != null && p.coords.accuracy > 150) { onEstado?.('impreciso'); return; }
+      onEstado?.('ok');
+      onUpdate({
+        lat: p.coords.latitude, lon: p.coords.longitude,
+        heading: Number.isFinite(p.coords.heading) ? p.coords.heading : null,
+        accuracy: p.coords.accuracy,
+      });
+    },
+    (e) => onEstado?.(e.code === 1 ? 'denegado' : 'sin-senal'),
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 }
   );
-  return () => navigator.geolocation.clearWatch(id);
+  return () => {
+    navigator.geolocation.clearWatch(id);
+    document.removeEventListener('visibilitychange', alVolver);
+    try { wake?.release(); } catch { /* ignorar */ }
+  };
 }
 
 /* Ruta real por calles. Devuelve distancia, duración y la polilínea. */
