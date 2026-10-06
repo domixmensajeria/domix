@@ -4,10 +4,11 @@ import { pointAlong } from './geo';
 /* Los cinco servicios de Domix, con los textos de la papelería de marca. */
 export const SERVICES = [
   { value: 'mensajeria', label: 'Mensajería', desc: 'Envíos de documentos, cartas y correspondencia', icon: 'mail', img: '/assets/svc-moto.webp', from: 6000 },
-  { value: 'autorizacion_medica', label: 'Autorizaciones médicas', desc: 'Trámites rápidos y seguros en EPS y clínicas', icon: 'medical_information', img: '/assets/svc-hora.webp', from: 8000 },
+  { value: 'taxi', label: 'Taxi Urbano', desc: 'Transporte de pasajeros dentro de Buenaventura (Servicio Especial opcional)', icon: 'local_taxi', img: '/assets/svc-carro.webp', from: 6900 },
+  { value: 'placa_blanca', label: 'Placa Blanca (Cali)', desc: 'Transporte intermunicipal por puesto y encomiendas Buenaventura ⇄ Cali', icon: 'airport_shuttle', img: '/assets/svc-carro.webp', from: 60000 },
   { value: 'encomienda', label: 'Encomiendas', desc: 'Envío de paquetes y mercancías a nivel local', icon: 'inventory_2', img: '/assets/svc-envio.webp', from: 8000 },
-  { value: 'domicilio', label: 'Domicilios', desc: 'Restaurantes, tiendas virtuales, maquillaje y más', icon: 'moped', img: '/assets/svc-carro.webp', from: 6000 },
-  { value: 'mandado', label: 'Mandados', desc: 'Compras, pagos, recados y diligencias varias', icon: 'shopping_bag', img: '/assets/svc-reserva.webp', from: 7000 },
+  { value: 'domicilio', label: 'Domicilios', desc: 'Restaurantes, tiendas virtuales, maquillaje y más', icon: 'moped', img: '/assets/svc-moto.webp', from: 6000 },
+  { value: 'mandado', label: 'Mandados', desc: 'Compras, pagos, recados y diligencias con instrucciones detalladas', icon: 'shopping_bag', img: '/assets/svc-reserva.webp', from: 7000 },
 ];
 
 /* Promesa para negocios: "Nosotros somos tu domiciliario". */

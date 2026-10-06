@@ -145,6 +145,24 @@ function EntregasContent() {
                 </div>
               </div>
 
+              {/* Servicio Especial y Detalle de Mandado / Encomienda */}
+              {(req.servicio_especial && req.servicio_especial !== 'ninguno') && (
+                <div style={{ marginTop: 10, padding: '4px 8px', borderRadius: 6, background: '#FFF3C4', color: '#795548', fontSize: 11, fontWeight: 700, display: 'inline-block' }}>
+                  ★ {req.servicio_especial === 'polarizado' ? 'Vidrios polarizados' : req.servicio_especial === 'bodega' ? 'Con bodega' : req.servicio_especial}
+                </div>
+              )}
+
+              {(req.instrucciones_detalladas || req.description) && (
+                <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 'var(--sh-sm)', background: 'var(--surface-container)', borderLeft: '3px solid var(--primary)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 800, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <Icon name="description" size={14} /> DETALLE E INSTRUCCIONES
+                  </div>
+                  <div style={{ fontSize: 12.5, marginTop: 4, color: 'var(--on-surface)', lineHeight: 1.45, whiteSpace: 'pre-line' }}>
+                    {req.instrucciones_detalladas || req.description}
+                  </div>
+                </div>
+              )}
+
               {req.contact_phone && ['assigned', 'picked_up', 'in_progress'].includes(req.status) && (
                 <a
                   href={`https://wa.me/57${req.contact_phone.replace(/\D/g, '').slice(-10)}`}

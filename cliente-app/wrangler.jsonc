@@ -19,5 +19,10 @@
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
-  }
+  },
+
+  "routes": [
+    { "pattern": "turafood.com", "custom_domain": true },
+    { "pattern": "pedir.turafood.com", "custom_domain": true }
+  ]
 }

@@ -189,6 +189,26 @@ function OrderDrawer({ req, couriers, onClose, onAdvance }) {
             />
           )}
 
+          {/* Servicio Especial de Taxi si aplica */}
+          {req.servicio_especial && req.servicio_especial !== 'ninguno' && (
+            <div style={{ padding: '10px 14px', borderRadius: 12, background: '#FFF3C4', color: '#795548', fontWeight: 700, fontSize: 13, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Icon name="star" size={16} fill color="#795548" />
+              <span>Servicio Especial: {req.servicio_especial === 'polarizado' ? 'Vidrios polarizados' : req.servicio_especial === 'bodega' ? 'Con bodega' : req.servicio_especial}</span>
+            </div>
+          )}
+
+          {/* Instrucciones Detalladas / Mandado / Encomienda */}
+          {(req.instrucciones_detalladas || req.description) && (
+            <Card style={{ padding: 16, marginTop: 14, borderLeft: '4px solid var(--primary)', background: 'var(--surface-container-high)' }}>
+              <Overline style={{ color: 'var(--primary)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="description" size={15} /> Instrucciones y Detalle del Servicio
+              </Overline>
+              <div style={{ fontSize: 13.5, lineHeight: 1.5, color: 'var(--on-surface)', whiteSpace: 'pre-line', fontWeight: 500 }}>
+                {req.instrucciones_detalladas || req.description}
+              </div>
+            </Card>
+          )}
+
           <Card style={{ padding: 16, marginTop: 14 }}>
             <Overline style={{ color: 'var(--on-surface-variant)', marginBottom: 11 }}>Cliente</Overline>
             <div style={{ fontSize: 14, fontWeight: 700 }}>{req.contact_name || 'Sin nombre'}</div>

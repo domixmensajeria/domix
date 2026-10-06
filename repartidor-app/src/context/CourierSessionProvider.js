@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useAppMode } from './AppModeProvider';
 import { buildDemoData, demoCourierProfile, makeIncomingRequest, DEMO_COURIERS } from '../lib/demo';
 import { watchPosition, haversineKm } from '../lib/geo';
+import { leerSesion, validarSesion } from '../lib/auth';
 
 const KEY = 'domix_courier_id';
 const CourierSessionContext = createContext(null);
@@ -51,11 +52,35 @@ export function CourierSessionProvider({ children }) {
 
   useEffect(() => {
     if (!modeReady || isDemo) return;
-    const stored = (() => { try { return localStorage.getItem(KEY); } catch { return null; } })();
-    const id = stored && !stored.startsWith('demo-') ? stored : null;
-    setCourierId(id);
-    if (id) loadReal(id).finally(() => setLoading(false));
-    else { setProfile(null); setCourierProfile(null); setLoading(false); }
+    let vivo = true;
+    (async () => {
+      const sesion = leerSesion();
+      if (!sesion?.token) {
+        if (!vivo) return;
+        setCourierId(null);
+        setProfile(null);
+        setCourierProfile(null);
+        setLoading(false);
+        return;
+      }
+      const valida = await validarSesion(sesion.token);
+      if (!vivo) return;
+      if (!valida || valida.rol !== 'courier') {
+        try {
+          localStorage.removeItem(KEY);
+          localStorage.removeItem('domix_sesion');
+        } catch { /* ignorar */ }
+        setCourierId(null);
+        setProfile(null);
+        setCourierProfile(null);
+        setLoading(false);
+        return;
+      }
+      setCourierId(valida.id);
+      await loadReal(valida.id);
+      if (vivo) setLoading(false);
+    })();
+    return () => { vivo = false; };
   }, [isDemo, modeReady, loadReal]);
 
   /* `sesion` llega cuando se entró con clave; en Demo no hay. */

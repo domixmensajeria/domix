@@ -27,6 +27,7 @@ export const TEXTOS = {
       equipo: 'Roles y permisos',
       equipoDomix: 'Equipo Domix',
       operaciones: 'Operaciones',
+      api_docs: 'APIs & Swagger',
     },
     comun: {
       buscar: 'Buscar pedido, repartidor o código…',
@@ -64,6 +65,7 @@ export const TEXTOS = {
       equipo: 'Roles and permissions',
       equipoDomix: 'Domix team',
       operaciones: 'Operations',
+      api_docs: 'APIs & Swagger',
     },
     comun: {
       buscar: 'Search an order, courier or code…',

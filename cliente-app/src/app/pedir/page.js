@@ -12,6 +12,7 @@ import { SERVICES, createRequest } from '../../lib/services';
 import { quote, etaMinutes, money, DEFAULT_RULES } from '../../lib/pricing';
 import { routeBetween, BUENAVENTURA } from '../../lib/geo';
 import { pushNotify } from '../../lib/notify';
+import { supabase } from '../../lib/supabaseClient';
 
 /* Pedir en dos pasos, no en un formulario de ocho campos.
 
@@ -34,13 +35,37 @@ function PedirForm() {
   const [turbo, setTurbo] = useState(params.get('turbo') === '1');
   const [pickup, setPickup] = useState({ address: '', point: null });
   const [dropoff, setDropoff] = useState({ address: '', point: null });
-  const [form, setForm] = useState({ contact_name: client?.name || '', contact_phone: client?.phone || '', description: '' });
+  const [form, setForm] = useState({
+    contact_name: client?.name || '',
+    contact_phone: client?.phone || '',
+    cliente_email: '',
+    description: '',
+    servicio_especial: 'ninguno',
+  });
   const [route, setRoute] = useState({ coords: [], distanceKm: 0, durationMin: null });
+  const [rules, setRules] = useState(DEFAULT_RULES);
   const [calculando, setCalculando] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  useEffect(() => {
+    if (isDemo) return;
+    let vivo = true;
+    supabase
+      .from('branches')
+      .select('pricing_rules')
+      .eq('city', 'Buenaventura')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (vivo && data?.pricing_rules && Object.keys(data.pricing_rules).length > 0) {
+          setRules((prev) => ({ ...prev, ...data.pricing_rules }));
+        }
+      })
+      .catch(() => {});
+    return () => { vivo = false; };
+  }, [isDemo]);
 
   useEffect(() => {
     let vivo = true;
@@ -54,7 +79,7 @@ function PedirForm() {
     return () => { vivo = false; };
   }, [pickup.point, dropoff.point]);
 
-  const q = quote({ distanceKm: route.distanceKm, serviceType: tipo, turbo });
+  const q = quote({ distanceKm: route.distanceKm, serviceType: tipo, turbo, rules });
   const eta = route.durationMin ?? etaMinutes(route.distanceKm, turbo);
 
   const hayRuta = !!pickup.address && !!dropoff.address;
@@ -84,9 +109,12 @@ function PedirForm() {
       service_type: tipo,
       contact_name: form.contact_name,
       contact_phone: form.contact_phone,
+      cliente_email: form.cliente_email || null,
       pickup_address: pickup.address,
       dropoff_address: dropoff.address,
       description: form.description || null,
+      instrucciones_detalladas: form.description || null,
+      servicio_especial: form.servicio_especial || 'ninguno',
       price: q.total,
       source: 'app',
       turbo,
@@ -258,6 +286,49 @@ function PedirForm() {
               </span>
             </button>
 
+            {/* Placa Blanca Cali: Banner informativo */}
+            {tipo === 'placa_blanca' && (
+              <div style={{ marginBottom: 18, background: 'rgba(15,138,109,0.1)', border: '1.5px solid #0f8a6d', borderRadius: 16, padding: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#0f8a6d', fontWeight: 800, fontSize: 14 }}>
+                  <Icon name="airport_shuttle" size={20} /> Ruta Intermunicipal Buenaventura ⇄ Cali
+                </div>
+                <p style={{ margin: '6px 0 12px', fontSize: 12, color: '#334155', lineHeight: 1.4 }}>
+                  Para reservar puestos en van con salidas de turno o solicitar envío/recepción de encomiendas Cali ⇄ Buenaventura:
+                </p>
+                <button
+                  type="button"
+                  onClick={() => router.push('/cali')}
+                  style={{ background: '#0f8a6d', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', fontSize: 12.5, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                >
+                  Abrir Portal de Salidas y Encomiendas a Cali &rarr;
+                </button>
+              </div>
+            )}
+
+            {/* Servicio Especial para Taxis */}
+            {tipo === 'taxi' && (
+              <div style={{ marginBottom: 16, background: '#fefce8', border: '1.5px solid #eab308', borderRadius: 14, padding: 14 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 800, color: '#854d0e', textTransform: 'uppercase', marginBottom: 6 }}>
+                  <Icon name="local_taxi" size={17} /> Servicio Especial (Opcional)
+                </label>
+                <select
+                  value={form.servicio_especial}
+                  onChange={set('servicio_especial')}
+                  style={{
+                    width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #cbd5e1',
+                    background: '#fff', fontSize: 13, fontWeight: 700, color: '#111', outline: 'none',
+                  }}
+                >
+                  <option value="ninguno">Ninguno (Taxi estándar)</option>
+                  <option value="polarizado">Vidrios polarizados</option>
+                  <option value="bodega">Con bodega amplia (Maletas / Equipaje)</option>
+                </select>
+                <div style={{ fontSize: 11, color: '#a16207', marginTop: 5, lineHeight: 1.3 }}>
+                  El servicio se asignará a taxistas con las características seleccionadas.
+                </div>
+              </div>
+            )}
+
             {/* A quién avisamos */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 13, marginBottom: 18 }}>
               <Field required label={t('pedir.tuNombre')} icon="person" placeholder={t('pedir.tuNombre')} value={form.contact_name} onChange={set('contact_name')} />
@@ -265,7 +336,8 @@ function PedirForm() {
               <div style={{ font: '500 11.5px/1.45 Manrope,sans-serif', color: 'var(--mu)', marginTop: -5, paddingLeft: 3 }}>
                 {t('pedir.celularPista')}
               </div>
-              <Field label={`${t('pedir.detalleOpcional')} (${t('comun.opcional')})`} icon="notes" rows={3} placeholder={t('pedir.detalleOpcionalPista')} value={form.description} onChange={set('description')} />
+              <Field label="Correo Electrónico (Para recibir comprobante y PIN)" icon="mail" type="email" placeholder="ejemplo@correo.com" value={form.cliente_email} onChange={set('cliente_email')} />
+              <Field label="¿Qué recogemos? / Instrucciones detalladas *" icon="inventory_2" rows={3} placeholder="Ej: recoger llaves con llavero de acrílico en portería / compras del Éxito con factura" value={form.description} onChange={set('description')} />
             </div>
 
             {/* Qué se paga y por qué */}

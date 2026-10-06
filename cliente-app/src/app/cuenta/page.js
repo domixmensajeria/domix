@@ -58,20 +58,72 @@ export default function CuentaPage() {
   const { theme, changeTheme } = useTheme();
   const { idioma, cambiarIdioma, t } = useIdioma();
 
-  const [form, setForm] = useState({ name: '', phone: '' });
+  const [form, setForm] = useState({ name: '', phone: '', email: '' });
   const [saved, setSaved] = useState(false);
   const [perm, setPerm] = useState('default');
+  const [emailVerificado, setEmailVerificado] = useState(false);
+  const [mostrandoOtp, setMostrandoOtp] = useState(false);
+  const [codigoOtp, setCodigoOtp] = useState('');
+  const [enviandoOtp, setEnviandoOtp] = useState(false);
+  const [otpMensaje, setOtpMensaje] = useState('');
 
   useEffect(() => {
-    setForm({ name: client?.name || '', phone: client?.phone || '' });
+    setForm({ name: client?.name || '', phone: client?.phone || '', email: client?.email || '' });
+    setEmailVerificado(Boolean(client?.email_confirmado));
     setPerm(notificationPermission());
   }, [client]);
 
   const guardar = (e) => {
     e.preventDefault();
-    saveClient({ name: form.name, phone: form.phone });
+    saveClient({ name: form.name, phone: form.phone, email: form.email, email_confirmado: emailVerificado });
     setSaved(true);
     setTimeout(() => setSaved(false), 2200);
+  };
+
+  const enviarOtp = async () => {
+    if (!form.email || !form.email.includes('@')) {
+      return setOtpMensaje('Ingresa un correo electrónico válido');
+    }
+    setEnviandoOtp(true);
+    setOtpMensaje('');
+    try {
+      const res = await fetch('/api/auth/registro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email.trim(), telefono: form.phone.trim(), nombre: form.name.trim(), rol: 'client' }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || 'Error al enviar código');
+      setMostrandoOtp(true);
+      setOtpMensaje('Código de 6 dígitos enviado a tu correo');
+    } catch (err) {
+      setOtpMensaje(err.message);
+    } finally {
+      setEnviandoOtp(false);
+    }
+  };
+
+  const confirmarOtp = async () => {
+    if (codigoOtp.trim().length !== 6) return setOtpMensaje('Ingresa el código de 6 dígitos');
+    setEnviandoOtp(true);
+    setOtpMensaje('');
+    try {
+      const res = await fetch('/api/auth/confirmar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email.trim(), codigo: codigoOtp.trim() }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || 'Código incorrecto o expirado');
+      setEmailVerificado(true);
+      setMostrandoOtp(false);
+      saveClient({ name: form.name, phone: form.phone, email: form.email, email_confirmado: true });
+      setOtpMensaje('¡Correo verificado con éxito!');
+    } catch (err) {
+      setOtpMensaje(err.message);
+    } finally {
+      setEnviandoOtp(false);
+    }
   };
 
   const entra = (n) => ({ animation: `dxSube .34s cubic-bezier(.2,.8,.2,1) ${n * 45}ms both` });
@@ -114,6 +166,77 @@ export default function CuentaPage() {
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
             />
+
+            <div>
+              <Field
+                label="Correo electrónico" icon="mail" type="email"
+                placeholder="cliente@correo.com"
+                value={form.email}
+                onChange={(e) => { setForm((f) => ({ ...f, email: e.target.value })); setEmailVerificado(false); }}
+              />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, padding: '0 4px' }}>
+                {emailVerificado ? (
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: '#2e7d32', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <Icon name="check_circle" size={15} /> Correo verificado con código
+                  </span>
+                ) : (
+                  <span style={{ fontSize: 11, color: 'var(--mu)' }}>
+                    Para recibir recibos y boletas de viaje
+                  </span>
+                )}
+                {!emailVerificado && form.email && (
+                  <button
+                    type="button"
+                    onClick={enviarOtp}
+                    disabled={enviandoOtp}
+                    style={{
+                      background: 'none', border: 'none', color: 'var(--primary)',
+                      fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                    }}
+                  >
+                    {enviandoOtp ? 'Enviando…' : 'Verificar correo'}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {mostrandoOtp && (
+              <div style={{ background: 'var(--sf)', padding: 14, borderRadius: 14, border: '1px solid var(--bd)' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 8, color: 'var(--tx)' }}>
+                  Ingresa el código de 6 dígitos enviado a tu correo:
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="123456"
+                    value={codigoOtp}
+                    onChange={(e) => setCodigoOtp(e.target.value)}
+                    style={{
+                      flex: 1, height: 42, borderRadius: 10, border: '1px solid var(--bd)',
+                      padding: '0 12px', fontSize: 18, fontWeight: 800, textAlign: 'center',
+                      fontFamily: 'monospace', letterSpacing: '4px',
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    onClick={confirmarOtp}
+                    disabled={enviandoOtp}
+                    style={{ height: 42, padding: '0 16px', fontSize: 12.5 }}
+                  >
+                    Confirmar
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {otpMensaje && (
+              <div style={{ fontSize: 12, fontWeight: 600, color: emailVerificado ? '#2e7d32' : 'var(--accent)', textAlign: 'center' }}>
+                {otpMensaje}
+              </div>
+            )}
+
             <Button type="submit" variant={saved ? 'green' : 'solid'} icon={saved ? 'check' : 'save'}>
               {saved ? t('comun.listo') : t('comun.guardar')}
             </Button>

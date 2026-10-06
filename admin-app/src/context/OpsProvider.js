@@ -5,7 +5,7 @@ import { useAppMode } from './AppModeProvider';
 import { buildDemoData, DEMO_COURIERS, makeIncomingRequest } from '../lib/demo';
 import { HOME_BRANCH } from '../lib/cities';
 import { DEFAULT_RULES, autoSurgeFor } from '../lib/pricing';
-import { fetchRequests, fetchCouriers, fetchBranches, assignCourier, setRequestStatus, createRequestFromAdmin, subscribeOps, OPEN_STATUSES } from '../lib/ops';
+import { fetchRequests, fetchCouriers, fetchBranches, assignCourier, setRequestStatus, createRequestFromAdmin, saveBranchRules, subscribeOps, OPEN_STATUSES } from '../lib/ops';
 import { pushNotify } from '../lib/notify';
 import { contarPendientes } from '../lib/pagos';
 
@@ -17,6 +17,7 @@ export function OpsProvider({ children }) {
   const [porResolver, setPorResolver] = useState(0);
   const recargaPendiente = useRef(null);
   const flotaRef = useRef([]);
+  const prevRequestsRef = useRef(null);
 
   const [requests, setRequests] = useState([]);
   const [couriers, setCouriers] = useState([]);
@@ -34,7 +35,11 @@ export function OpsProvider({ children }) {
   const saveRules = useCallback((next) => {
     setRules(next);
     try { localStorage.setItem(RULES_KEY, JSON.stringify(next)); } catch { /* ignorar */ }
-  }, []);
+    const sedeId = branches[0]?.id;
+    if (sedeId && !String(sedeId).startsWith('demo-')) {
+      saveBranchRules(sedeId, next).catch(() => {});
+    }
+  }, [branches]);
 
   /* ---------- Carga según el modo ---------- */
   const loadLive = useCallback(async () => {
@@ -43,6 +48,19 @@ export function OpsProvider({ children }) {
         fetchRequests(), fetchCouriers(), fetchBranches().catch(() => []), contarPendientes().catch(() => 0),
       ]);
       setPorResolver(pend);
+
+      if (prevRequestsRef.current !== null) {
+        const viejosIds = new Set(prevRequestsRef.current.map((x) => x.id));
+        const nuevos = (r || []).filter((x) => !viejosIds.has(x.id) && x.status === 'requested');
+        for (const nuevo of nuevos) {
+          pushNotify('Nuevo pedido en Domix', {
+            body: `${nuevo.contact_name || 'Cliente'} · ${nuevo.dropoff_address || ''}`,
+            tag: `admin-${nuevo.id}`,
+          });
+        }
+      }
+      prevRequestsRef.current = r || [];
+
       setRequests(r);
       setCouriers(c.map((x) => ({
         id: x.id,
@@ -52,6 +70,9 @@ export function OpsProvider({ children }) {
         lat: x.last_lat, lon: x.last_lon,
       })));
       setBranches(b.length ? b : [HOME_BRANCH]);
+      if (b[0]?.pricing_rules && Object.keys(b[0].pricing_rules).length > 0) {
+        setRules((prev) => ({ ...prev, ...b[0].pricing_rules }));
+      }
     } catch { /* sin red */ } finally { setLoading(false); }
   }, []);
 

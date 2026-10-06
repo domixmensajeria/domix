@@ -15,6 +15,9 @@ export const dynamic = 'force-dynamic';
 
 function supabaseServidor() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn('[webhook whatsapp] ADVERTENCIA: Falta SUPABASE_SERVICE_ROLE_KEY. Con RLS activo (Migración 11), las inserciones anónimas serán rechazadas.');
+  }
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
   return createClient(url, key, { auth: { persistSession: false } });

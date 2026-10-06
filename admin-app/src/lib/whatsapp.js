@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { leerSesion } from './auth';
 
 export const ESTADOS_CONV = {
   abierta: { label: 'Sin atender', tone: 'amber' },
@@ -58,9 +59,13 @@ export async function guardarBorrador(conversationId, draft) {
    qué pasó, en vez de creer que el cliente ya recibió la respuesta. */
 export async function registrarSalida(conversationId, body, waId, author = 'domix') {
   try {
+    const token = leerSesion()?.token || '';
     const r = await fetch('/api/responder', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-domix-token': token,
+      },
       body: JSON.stringify({ waId, texto: body, conversationId, autor: author }),
     });
     const data = await r.json().catch(() => ({}));

@@ -14,6 +14,7 @@ import {
 import { CONVERSACIONES_DEMO, BORRADORES_DEMO } from '../../lib/demoWhatsapp';
 import { SERVICE_LABELS, SERVICE_ICON, createRequestFromAdmin } from '../../lib/ops';
 import { money } from '../../lib/pricing';
+import { leerSesion } from '../../lib/auth';
 
 function hace(iso) {
   if (!iso) return '';
@@ -166,9 +167,13 @@ export default function BandejaPage() {
       return;
     }
     try {
+      const token = leerSesion()?.token || '';
       const res = await fetch('/api/leer-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-domix-token': token,
+        },
         body: JSON.stringify({ mensajes }),
       });
       const data = await res.json();

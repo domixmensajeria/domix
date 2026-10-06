@@ -197,36 +197,90 @@ export default function SeguimientoPage() {
                 </div>
               )}
 
-              {/* Quién lo lleva, con cómo contactarlo a un toque */}
+              {/* Quién lo lleva, con datos completos del conductor y vehículo a un toque */}
               {req.courier_name && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 13, padding: 14, borderRadius: 16, border: '1px solid var(--bd)', marginBottom: 18 }}>
-                  <span style={{ width: 46, height: 46, borderRadius: '50%', background: 'var(--sf)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 16px Manrope,sans-serif', flex: 'none' }}>
-                    {req.courier_name[0]?.toUpperCase()}
-                  </span>
-                  <span style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ display: 'block', font: '700 14.5px Manrope,sans-serif' }}>{req.courier_name}</span>
-                    <span style={{ display: 'block', font: '500 12px Manrope,sans-serif', color: 'var(--mu)', marginTop: 1 }}>
-                      {t('seguimiento.tuRepartidorSub')}
+                <div style={{ borderRadius: 18, border: '1px solid var(--bd)', background: 'var(--sf)', padding: '14px 16px', marginBottom: 18 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
+                    <span style={{ width: 48, height: 48, borderRadius: '50%', background: 'var(--inv)', color: 'var(--invtx)', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 17px Manrope,sans-serif', flex: 'none' }}>
+                      {req.courier_name[0]?.toUpperCase()}
                     </span>
-                  </span>
-                  {req.courier_phone && (
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ font: '800 15px Manrope,sans-serif', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {req.courier_name}
+                      </div>
+                      <div style={{ font: '600 12px Manrope,sans-serif', color: 'var(--mu)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        {req.courier_cedula && (
+                          <span>C.C. {req.courier_cedula}</span>
+                        )}
+                        {req.service_type === 'taxi' && (
+                          <span style={{ background: '#FFF3C4', color: '#795548', padding: '1px 6px', borderRadius: 6, fontWeight: 700, fontSize: 10 }}>TAXI</span>
+                        )}
+                        {req.service_type === 'placa_blanca' && (
+                          <span style={{ background: '#E2E8F0', color: '#1E293B', padding: '1px 6px', borderRadius: 6, fontWeight: 700, fontSize: 10 }}>PLACA BLANCA</span>
+                        )}
+                      </div>
+                    </div>
+                    {req.courier_phone && (
+                      <a
+                        aria-label={t('seguimiento.llamar')}
+                        href={`tel:${req.courier_phone}`}
+                        style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--bg)', border: '1px solid var(--bd)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}
+                      >
+                        <Icon name="call" size={18} fill />
+                      </a>
+                    )}
                     <a
-                      aria-label={t('seguimiento.llamar')}
-                      href={`tel:${req.courier_phone}`}
-                      style={{ width: 42, height: 42, borderRadius: '50%', background: 'var(--sf)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}
+                      aria-label={t('seguimiento.escribir')}
+                      href={req.courier_phone ? `https://wa.me/57${String(req.courier_phone).replace(/\D/g, '').slice(-10)}` : WHATSAPP}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--greenS)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}
                     >
-                      <Icon name="call" size={19} fill />
+                      <Icon name="chat" size={18} fill color="var(--green)" />
                     </a>
+                  </div>
+
+                  {/* Placa y modelo del vehículo */}
+                  {req.vehicle_plate && (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--bd)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{
+                          background: req.service_type === 'taxi' ? '#FEE715' : '#FFFFFF',
+                          color: '#000000',
+                          border: '2px solid #000000',
+                          borderRadius: 6,
+                          padding: '2px 8px',
+                          font: "800 13px 'IBM Plex Mono',monospace",
+                          letterSpacing: '1px',
+                          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                        }}>
+                          {req.vehicle_plate.toUpperCase()}
+                        </span>
+                        {req.vehicle_model && (
+                          <span style={{ font: '600 12px Manrope,sans-serif', color: 'var(--mu)' }}>
+                            {req.vehicle_model}
+                          </span>
+                        )}
+                      </div>
+                      {req.servicio_especial && req.servicio_especial !== 'ninguno' && (
+                        <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 8px', borderRadius: 8, background: 'rgba(255, 122, 0, 0.12)', color: 'var(--accent)' }}>
+                          ★ {req.servicio_especial === 'polarizado' ? 'Vidrios polarizados' : req.servicio_especial === 'bodega' ? 'Con bodega' : req.servicio_especial}
+                        </span>
+                      )}
+                    </div>
                   )}
-                  <a
-                    aria-label={t('seguimiento.escribir')}
-                    href={WHATSAPP}
-                    target="_blank"
-                    rel="noreferrer"
-                    style={{ width: 42, height: 42, borderRadius: '50%', background: 'var(--greenS)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}
-                  >
-                    <Icon name="chat" size={19} fill color="var(--green)" />
-                  </a>
+                </div>
+              )}
+
+              {/* Instrucciones detalladas o descripción del mandado */}
+              {(req.instrucciones_detalladas || req.description) && (
+                <div style={{ borderRadius: 16, border: '1px dashed var(--bd)', background: 'var(--sf)', padding: '12px 14px', marginBottom: 18 }}>
+                  <div style={{ font: '700 10.5px Manrope,sans-serif', letterSpacing: '.1em', color: 'var(--mu)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <Icon name="notes" size={14} /> Detalle e Instrucciones
+                  </div>
+                  <div style={{ font: '500 13px/1.45 Manrope,sans-serif', marginTop: 5, color: 'var(--tx)', whiteSpace: 'pre-line' }}>
+                    {req.instrucciones_detalladas || req.description}
+                  </div>
                 </div>
               )}
 

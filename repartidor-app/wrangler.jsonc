@@ -16,5 +16,10 @@
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
-  }
+  },
+
+  "routes": [
+    { "pattern": "app.turafood.com", "custom_domain": true },
+    { "pattern": "repartidor.turafood.com", "custom_domain": true }
+  ]
 }

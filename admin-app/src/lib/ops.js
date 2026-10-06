@@ -5,6 +5,9 @@ export const SERVICE_LABELS = {
   encomienda: 'Encomienda',
   domicilio: 'Domicilio',
   mandado: 'Mandado',
+  taxi: 'Taxi Urbano',
+  placa_blanca: 'Placa Blanca (Cali)',
+  intermunicipal_encomienda: 'Encomienda Buenaventura ⇄ Cali',
   autorizacion_medica: 'Autorización médica',
 };
 
@@ -13,6 +16,9 @@ export const SERVICE_ICON = {
   encomienda: 'inventory_2',
   domicilio: 'moped',
   mandado: 'shopping_bag',
+  taxi: 'local_taxi',
+  placa_blanca: 'directions_bus',
+  intermunicipal_encomienda: 'local_shipping',
   autorizacion_medica: 'medical_information',
 };
 
@@ -68,7 +74,23 @@ export async function toggleBranch(id, is_active) {
 }
 
 export async function saveBranchRules(id, pricing_rules) {
-  return supabase.from('branches').update({ pricing_rules }).eq('id', id).select().maybeSingle();
+  const { data, error } = await supabase.rpc('guardar_tarifas_sede', {
+    p_branch_id: id,
+    p_rules: pricing_rules,
+  });
+  if (error) {
+    return supabase.from('branches').update({ pricing_rules }).eq('id', id).select().maybeSingle();
+  }
+  return { data };
+}
+
+export async function assignCourierPassword(profileId, password) {
+  const { data, error } = await supabase.rpc('admin_asignar_clave', {
+    p_profile_id: profileId,
+    p_clave: password,
+  });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, data };
 }
 
 export async function assignCourier(requestId, courierId) {
@@ -85,13 +107,19 @@ export async function setRequestStatus(requestId, status) {
   return supabase.from('service_requests').update({ status, ...(stamps[status] || {}) }).eq('id', requestId).select().maybeSingle();
 }
 
-export async function createCourier({ first_name, last_name, phone_number, work_zone, branch_id }) {
+export async function createCourier({ first_name, last_name, phone_number, work_zone, branch_id, password }) {
   const { data: profile, error: e1 } = await supabase
     .from('profiles').insert({ first_name, last_name, phone_number, role: 'courier' }).select().single();
   if (e1) return { error: e1 };
   const { error: e2 } = await supabase.from('courier_profiles')
     .insert({ id: profile.id, work_zone: work_zone || 'Centro', branch_id: branch_id || null });
   if (e2) return { error: e2 };
+
+  if (password?.trim()) {
+    const res = await assignCourierPassword(profile.id, password.trim());
+    if (!res.ok) return { data: profile, error: { message: `Repartidor creado, pero falló la asignación de clave: ${res.error}` } };
+  }
+
   return { data: profile };
 }
 

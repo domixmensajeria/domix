@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
+import { createClient } from '@supabase/supabase-js';
 
 /* Lee una conversación de WhatsApp y arma el borrador del pedido.
    Corre en el servidor: la clave nunca llega al navegador. */
@@ -39,6 +40,23 @@ Reglas:
 - Si el mensaje no es un pedido (un saludo, una queja, una pregunta de precios), pon es_pedido en false y responde igual con algo útil.`;
 
 export async function POST(request) {
+  const sesionToken = request.headers.get('x-domix-token');
+  if (!sesionToken) {
+    return Response.json({ error: 'No autorizado. Se requiere sesión.' }, { status: 401 });
+  }
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    return Response.json({ error: 'Servicio no configurado en el servidor.' }, { status: 503 });
+  }
+
+  const supabase = createClient(url, key, { auth: { persistSession: false } });
+  const { data: sesionData, error: sesionError } = await supabase.rpc('validar_sesion', { p_token: sesionToken });
+  if (sesionError || !sesionData?.length || !['admin', 'despachador'].includes(sesionData[0]?.rol)) {
+    return Response.json({ error: 'Sesión inválida o permisos insuficientes.' }, { status: 403 });
+  }
+
   if (!process.env.ANTHROPIC_API_KEY) {
     return Response.json(
       { error: 'Falta configurar ANTHROPIC_API_KEY en el servidor.' },
@@ -63,8 +81,9 @@ export async function POST(request) {
 
   try {
     const client = new Anthropic();
+    const model = process.env.ANTHROPIC_MODEL || 'claude-3-5-sonnet-20241022';
     const respuesta = await client.messages.parse({
-      model: 'claude-opus-5',
+      model,
       max_tokens: 4000,
       system: INSTRUCCIONES,
       output_config: {

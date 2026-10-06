@@ -182,7 +182,7 @@ export async function routeBetween(from, to) {
   if (!from || !to) return { distanceKm: 0, durationMin: null, coords: [] };
   try {
     const url = `${OSRM}/route/v1/driving/${from.lon},${from.lat};${to.lon},${to.lat}?overview=full&geometries=geojson`;
-    const res = await fetch(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(3500) });
     if (!res.ok) return fallback;
     const data = await res.json();
     const r = data.routes?.[0];

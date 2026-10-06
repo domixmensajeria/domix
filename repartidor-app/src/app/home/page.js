@@ -36,6 +36,7 @@ function HomeContent() {
   const [loading, setLoading] = useState(true);
   const [perm, setPerm] = useState('default');
   const [pinPara, setPinPara] = useState(null);
+  const [detallePedido, setDetallePedido] = useState(null);
   const seen = useRef(new Map());
   const [latido, setLatido] = useState(0);
 
@@ -110,8 +111,11 @@ function HomeContent() {
   const accept = async (req) => {
     setOffer(null);
     if (isDemo) return demoAccept(req.id);
-    const { error } = await acceptRequest(req.id, courierId);
-    if (!error) loadLive();
+    const { data, error } = await acceptRequest(req.id, courierId);
+    if (error || !data) {
+      pushNotify('Pedido no disponible', { body: 'Este pedido ya fue asignado a otro repartidor.', tag: `taken-${req.id}` });
+    }
+    loadLive();
   };
 
   const advance = async (req) => {
@@ -251,14 +255,57 @@ function HomeContent() {
                 <span style={{ width: 40, height: 40, borderRadius: 'var(--sh-sm)', background: 'var(--primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
                   <Icon name={SERVICE_ICON[current.service_type]} size={20} color="var(--on-primary-container)" />
                 </span>
-                <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={{ display: 'block', fontSize: 13.5, fontWeight: 800 }}>{serviceLabel(current.service_type)}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontWeight: 800, fontSize: 13.5 }}>{serviceLabel(current.service_type)}</span>
+                    {current.servicio_especial && current.servicio_especial !== 'ninguno' && (
+                      <span style={{ background: '#FFF3C4', color: '#795548', padding: '1px 6px', borderRadius: 6, fontWeight: 700, fontSize: 10 }}>
+                        {current.servicio_especial === 'polarizado' ? 'Vidrios polarizados' : current.servicio_especial === 'bodega' ? 'Con bodega' : current.servicio_especial}
+                      </span>
+                    )}
+                  </div>
                   <span style={{ display: 'block', fontSize: 11.5, color: 'var(--on-surface-variant)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {current.status === 'assigned' ? current.pickup_address : current.dropoff_address}
                   </span>
-                </span>
+                </div>
                 <span className="num" style={{ fontWeight: 800, fontSize: 18 }}>{money(current.price)}</span>
               </div>
+
+              {/* Instrucciones detalladas destacadas para el repartidor / conductor */}
+              {(current.instrucciones_detalladas || current.description) && (
+                <div
+                  onClick={() => setDetallePedido(current)}
+                  style={{
+                    cursor: 'pointer',
+                    marginTop: 12,
+                    padding: '11px 13px',
+                    borderRadius: 'var(--sh-sm)',
+                    background: 'var(--surface-container)',
+                    border: '1px solid var(--outline-variant)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 800, color: 'var(--primary)', letterSpacing: '.04em' }}>
+                      <Icon name="description" size={15} />
+                      INSTRUCCIONES / DETALLE
+                    </div>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--on-surface-variant)' }}>Ver todo ➔</span>
+                  </div>
+                  <div style={{
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    color: 'var(--on-surface)',
+                    marginTop: 4,
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    lineHeight: 1.4,
+                  }}>
+                    {current.instrucciones_detalladas || current.description}
+                  </div>
+                </div>
+              )}
 
               {current.contact_phone && (
                 <a
@@ -345,6 +392,92 @@ function HomeContent() {
           onClose={() => setPinPara(null)}
           onConfirmado={() => { setPinPara(null); loadLive(); }}
         />
+      )}
+
+      {detallePedido && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.65)',
+          backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+          animation: 'dxFade .2s ease',
+        }}>
+          <div style={{
+            width: '100%', maxWidth: 480, maxHeight: '85vh', overflowY: 'auto',
+            background: 'var(--surface)', borderRadius: '24px 24px 0 0', padding: '20px 20px 32px',
+            animation: 'dxSube .3s cubic-bezier(.2,.8,.2,1)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ width: 38, height: 38, borderRadius: 'var(--sh-sm)', background: 'var(--primary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Icon name={SERVICE_ICON[detallePedido.service_type] || 'inventory_2'} size={20} color="var(--on-primary-container)" />
+                </span>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: 16 }}>{serviceLabel(detallePedido.service_type)}</div>
+                  <div style={{ fontSize: 12, color: 'var(--on-surface-variant)' }}>Código #{detallePedido.tracking_code}</div>
+                </div>
+              </div>
+              <button
+                onClick={() => setDetallePedido(null)}
+                style={{ width: 34, height: 34, borderRadius: '50%', background: 'var(--surface-container)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Icon name="close" size={18} />
+              </button>
+            </div>
+
+            {detallePedido.servicio_especial && detallePedido.servicio_especial !== 'ninguno' && (
+              <div style={{ padding: '10px 14px', borderRadius: 12, background: '#FFF3C4', color: '#795548', fontWeight: 700, fontSize: 12.5, marginBottom: 14 }}>
+                ★ Servicio Especial Solicitado: {detallePedido.servicio_especial === 'polarizado' ? 'Vidrios polarizados' : detallePedido.servicio_especial === 'bodega' ? 'Con bodega' : detallePedido.servicio_especial}
+              </div>
+            )}
+
+            {/* Instrucciones Detalladas destacadas */}
+            <div style={{ background: 'var(--surface-container-high)', borderRadius: 16, padding: '14px 16px', marginBottom: 16, borderLeft: '4px solid var(--primary)' }}>
+              <div style={{ font: '800 11.5px Manrope,sans-serif', letterSpacing: '.08em', color: 'var(--primary)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Icon name="description" size={16} /> INSTRUCCIONES EXACTAS DEL CLIENTE
+              </div>
+              <div style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--on-surface)', whiteSpace: 'pre-line' }}>
+                {detallePedido.instrucciones_detalladas || detallePedido.description || 'Sin instrucciones adicionales especificadas.'}
+              </div>
+            </div>
+
+            {/* Puntos de Recogida y Entrega */}
+            <div style={{ background: 'var(--surface-container)', borderRadius: 16, padding: 14, marginBottom: 16 }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 12 }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', border: '2.5px solid var(--primary)', flex: 'none', marginTop: 4 }} />
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Recogida</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, marginTop: 2 }}>{detallePedido.pickup_address}</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--primary)', flex: 'none', marginTop: 4 }} />
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--on-surface-variant)', textTransform: 'uppercase' }}>Entrega</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, marginTop: 2 }}>{detallePedido.dropoff_address}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Cliente y Tarifa */}
+            <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
+              <div style={{ flex: 1, padding: 12, borderRadius: 12, background: 'var(--surface-container)' }}>
+                <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', fontWeight: 600 }}>Tarifa Servicio</div>
+                <div style={{ fontSize: 18, fontWeight: 800, marginTop: 3 }}>{money(detallePedido.price)}</div>
+              </div>
+              {detallePedido.contact_phone && (
+                <a
+                  href={`https://wa.me/57${String(detallePedido.contact_phone).replace(/\D/g, '').slice(-10)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ flex: 1, padding: 12, borderRadius: 12, background: 'var(--secondary-container)', color: 'var(--on-secondary-container)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontWeight: 700, fontSize: 13 }}
+                >
+                  <Icon name="chat" size={18} fill /> WhatsApp
+                </a>
+              )}
+            </div>
+
+            <Button full onClick={() => setDetallePedido(null)}>Entendido / Cerrar</Button>
+          </div>
+        </div>
       )}
 
       <BottomNav badges={{ '/entregas': active.length }} />

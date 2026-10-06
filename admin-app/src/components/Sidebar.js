@@ -11,6 +11,7 @@ const NAV = [
     items: [
       { clave: 'dashboard', path: '/', icon: 'dashboard' },
       { clave: 'pedidos', path: '/pedidos', icon: 'receipt_long', badge: 'pending' },
+      { clave: 'cali', label: 'Cali & Playeros', path: '/cali', icon: 'directions_bus', tag: 'PLACA BLANCA' },
       { clave: 'mapa', path: '/mapa', icon: 'explore' },
       { clave: 'bandeja', path: '/bandeja', icon: 'chat', tag: 'IA' },
     ],
@@ -34,6 +35,7 @@ const NAV = [
     clave: 'sistema',
     items: [
       { clave: 'equipo', path: '/equipo', icon: 'shield_person' },
+      { clave: 'api_docs', path: '/api-docs', icon: 'api', tag: 'SWAGGER' },
     ],
   },
 ];
@@ -81,7 +83,7 @@ export default function Sidebar() {
                 return (
                   <button key={n.path} className="dx-navitem" data-active={active} onClick={() => router.push(n.path)}>
                     <Icon name={n.icon} size={19} fill={active} />
-                    <span style={{ flex: 1 }}>{t(`nav.${n.clave}`)}</span>
+                    <span style={{ flex: 1 }}>{n.label || t(`nav.${n.clave}`)}</span>
                     {badge > 0 && (
                       <span className="num" style={{ minWidth: 19, height: 19, padding: '0 5px', borderRadius: 99, background: '#c98a1e', color: '#fff', font: "700 10.5px 'IBM Plex Mono',monospace", display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {badge}

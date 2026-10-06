@@ -110,7 +110,19 @@ export default function Login({
           {cargando ? 'Entrando…' : 'Entrar'}
         </button>
 
-        <div style={{ textAlign: 'center', font: '500 11px Manrope,sans-serif', color: 'rgba(255,255,255,.3)', marginTop: 22 }}>
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <a
+            href="/registro"
+            style={{
+              display: 'inline-block', color: '#5FBF45', fontWeight: 700,
+              fontSize: 13, textDecoration: 'none',
+            }}
+          >
+            ¿Nuevo conductor (Taxi / Placa Blanca / Moto)? Regístrate aquí ➔
+          </a>
+        </div>
+
+        <div style={{ textAlign: 'center', font: '500 11px Manrope,sans-serif', color: 'rgba(255,255,255,.3)', marginTop: 16 }}>
           ¿Olvidaste tu clave? Escríbele a Domix al 315 792 4906
         </div>
       </form>

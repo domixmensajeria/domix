@@ -22,8 +22,13 @@ Documentos: cada repartidor solo sube/lee su carpeta (probado). `crear_solicitud
 ## GPS (migración 13)
 App del repartidor: descarta posiciones con precisión peor a 150 m, publica si pasaron 5 s y se movió >8 m (o cada 20 s), mantiene la pantalla activa (Wake Lock) y avisa si el permiso está denegado, sin señal o es impreciso (verificado en producción: el aviso aparece). Política lista para guardar historial de ruta (`tracking_points`), aún sin escribir desde la app. Sigue faltando probarlo en un teléfono real en movimiento.
 
-## Revisión de base de datos (1 oct)
-2 repartidores + 1 admin, 0 pedidos, todas las tablas con RLS, sin datos demo, sin huérfanos (perfiles sin clave, repartidores sin perfil, pedidos sin PIN).
+## Migración 14 — Producción y Finanzas (6 de octubre de 2026)
+- **Finanzas / Saldo:** `saldo_repartidor` reformulado para retener la comisión de Domix (80% repartidor / 20% empresa) y discriminar pagos en efectivo (`cash`): el dinero cobrado en mano no infla el saldo digital a retirar, y se descuenta el 20% adeudado a la empresa.
+- **Seguridad en entrega:** `confirm_delivery` exige que quien confirme sea el repartidor asignado (`courier_id = domix_uid()`) o el admin.
+- **Gestión de claves:** `admin_asignar_clave` creada y habilitada en el panel para crear repartidores con contraseña o cambiarla interactivamente.
+- **Sincronización de tarifas:** las reglas de despacho del panel se guardan en la base (`branches.pricing_rules`) y la app de cliente las lee en vivo.
+- **Seguridad de APIs:** `/api/responder` y `/api/leer-chat` protegidos con validación de rol `admin`/`despachador`. Modelo de Anthropic actualizado a `claude-3-5-sonnet-20241022`.
+- **Notificaciones del panel:** sondeo con detección de pedidos entrantes (`pushNotify` sonoro/visual activo).
 
 ## Marcha atrás
 `database/migracion_11_rollback.sql` restaura el acceso abierto.

@@ -8,6 +8,23 @@ import { createClient } from '@supabase/supabase-js';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
+  const sesionToken = request.headers.get('x-domix-token');
+  if (!sesionToken) {
+    return Response.json({ error: 'No autorizado. Se requiere sesión.' }, { status: 401 });
+  }
+
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    return Response.json({ error: 'Servicio no configurado en el servidor.' }, { status: 503 });
+  }
+
+  const supabase = createClient(url, key, { auth: { persistSession: false } });
+  const { data: sesionData, error: sesionError } = await supabase.rpc('validar_sesion', { p_token: sesionToken });
+  if (sesionError || !sesionData?.length || !['admin', 'despachador'].includes(sesionData[0]?.rol)) {
+    return Response.json({ error: 'Sesión inválida o permisos insuficientes.' }, { status: 403 });
+  }
+
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const token = process.env.WHATSAPP_ACCESS_TOKEN;
 
@@ -53,10 +70,7 @@ export async function POST(request) {
 
   // Queda registrado en la conversación para que el chat del panel
   // muestre lo mismo que ve el cliente en su teléfono.
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (conversationId && url && key) {
-    const supabase = createClient(url, key, { auth: { persistSession: false } });
+  if (conversationId) {
     await supabase.from('whatsapp_messages').insert({
       conversation_id: conversationId,
       wa_message_id: respuesta?.messages?.[0]?.id || null,
