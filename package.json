@@ -1,0 +1,10 @@
+{
+  "name": "domix-ecosistema",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:admin": "npm --prefix admin-app run dev",
+    "dev:cliente": "npm --prefix cliente-app run dev",
+    "dev:repartidor": "npm --prefix repartidor-app run dev"
+  }
+}

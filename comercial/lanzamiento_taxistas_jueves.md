@@ -11,7 +11,7 @@
   * Exigen tarjetas de crédito o retienen el dinero semanas.
 * **La propuesta de Domix:**
   * **Nuestra gente, nuestro puerto:** Domix es de Buenaventura, con oficina física y soporte directo por WhatsApp.
-  * **Comisión justa y transparente:** Sin tarifas ocultas.
+  * **Comisión y Reparto Claro (70/30):** En cada carrera o mandado, el 70% íntegro es para el conductor y el 30% para la plataforma, sin cobros ocultos ni sorpresas (Ejemplo: un mandado de $10.000 entrega $7.000 al conductor y $3.000 a Domix).
   * **El pasajero dicta el PIN al subir o llegar:** Seguridad blindada para el taxista y el usuario.
   * **Opciones que el bonaverense pide:** Servicio con aire/polarizado, espacio para maletas/bodega en carreras al muelle o terminal.
 

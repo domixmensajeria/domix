@@ -19,7 +19,7 @@ export const DEFAULT_RULES = {
   turboFee: 3500,          // recargo de entrega prioritaria
   turboRadiusKm: 3,        // cobertura máxima para Turbo
   coverageRadiusKm: 8,     // cobertura general
-  courierSharePct: 80,     // % de la tarifa que se lleva el repartidor
+  courierSharePct: 70,     // % de la tarifa que se lleva el repartidor (70% repartidor / 30% Domix)
   autoAssign: true,        // asignación automática al más cercano
 };
 

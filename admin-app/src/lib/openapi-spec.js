@@ -55,7 +55,7 @@ Este servidor Swagger documenta y permite ejecutar en tiempo real:
     },
     {
       name: 'Finanzas & Flota (RPC)',
-      description: 'Liquidación de saldos 80/20, comisiones y telemetría de repartidores',
+      description: 'Liquidación de saldos 70/30 (70% conductor / 30% Domix), comisiones y telemetría de repartidores',
     },
     {
       name: 'Autenticación & Seguridad',
@@ -592,8 +592,8 @@ Este servidor Swagger documenta y permite ejecutar en tiempo real:
                   properties: {
                     total_carreras: { type: 'integer', example: 12 },
                     ingresos_brutos: { type: 'number', example: 96000 },
-                    comision_plataforma: { type: 'number', example: 19200, description: '20% correspondiente a Domix' },
-                    ingresos_netos: { type: 'number', example: 76800, description: '80% correspondiente al repartidor' },
+                    comision_plataforma: { type: 'number', example: 3000, description: '30% correspondiente a Domix' },
+                    ingresos_netos: { type: 'number', example: 7000, description: '70% correspondiente al repartidor' },
                     efectivo_cobrado: { type: 'number', example: 64000, description: 'Dinero en mano que el repartidor recaudó en efectivo' },
                     saldo_pendiente: { type: 'number', example: 12800, description: 'Diferencia a favor o en contra' },
                   },

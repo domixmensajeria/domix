@@ -262,23 +262,55 @@ function OrderDrawer({ req, couriers, onClose, onAdvance }) {
 
 /* ---------- Alta manual de pedido (llamada / WhatsApp) ---------- */
 function NuevoPedido({ onClose, onCreate, rules }) {
-  const [form, setForm] = useState({ service_type: 'mensajeria', contact_name: '', contact_phone: '', pickup_address: '', dropoff_address: '', distance_km: 3, turbo: false });
+  const [form, setForm] = useState({
+    service_type: 'mensajeria',
+    contact_name: '',
+    contact_phone: '',
+    pickup_address: '',
+    dropoff_address: '',
+    distance_km: 3,
+    turbo: false,
+    servicio_especial: 'ninguno',
+    instrucciones_detalladas: '',
+    precio_personalizado: '',
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const q = quote({ distanceKm: Number(form.distance_km) || 0, serviceType: form.service_type, turbo: form.turbo, rules });
+  const precioSistema = q.total;
+  const precioFinal = form.precio_personalizado !== '' && !isNaN(Number(form.precio_personalizado))
+    ? Number(form.precio_personalizado)
+    : precioSistema;
+
+  // Reparto 70% para conductor / 30% para Domix
+  const parteRepartidor = Math.round(precioFinal * 0.70);
+  const parteDomix = Math.round(precioFinal * 0.30);
 
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true);
     setError('');
     const { error } = await onCreate({
-      ...form,
+      service_type: form.service_type,
+      contact_name: form.contact_name,
+      contact_phone: form.contact_phone,
+      pickup_address: form.pickup_address,
+      dropoff_address: form.dropoff_address,
       distance_km: Number(form.distance_km) || null,
+      turbo: form.turbo,
+      servicio_especial: form.servicio_especial,
+      instrucciones_detalladas: form.instrucciones_detalladas,
       eta_minutes: etaMinutes(Number(form.distance_km) || 0, form.turbo),
-      price: q.total,
-      price_breakdown: q.breakdown,
+      price: precioFinal,
+      price_breakdown: {
+        ...q.breakdown,
+        precio_sistema_sugerido: precioSistema,
+        precio_manual_aplicado: precioFinal,
+        repartidor_70_pct: parteRepartidor,
+        domix_30_pct: parteDomix,
+      },
     });
     setBusy(false);
     if (error) return setError(error.message);
@@ -286,9 +318,14 @@ function NuevoPedido({ onClose, onCreate, rules }) {
   };
 
   return (
-    <Card elevation={3} style={{ padding: 20, marginBottom: 18 }}>
+    <Card elevation={3} style={{ padding: 22, marginBottom: 18, border: '1px solid var(--outline-variant)' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <span className="dsp" style={{ fontWeight: 800, fontSize: 18 }}>Nuevo pedido</span>
+        <div>
+          <span className="dsp" style={{ fontWeight: 800, fontSize: 20 }}>Nuevo Pedido / Servicio Manual</span>
+          <span style={{ display: 'block', fontSize: 12, color: 'var(--on-surface-variant)', marginTop: 2 }}>
+            Ingreso telefónico o por WhatsApp con cotización automática y ajuste manual
+          </span>
+        </div>
         <button aria-label="Cerrar" onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--surface-container)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="close" size={19} />
         </button>
@@ -296,32 +333,139 @@ function NuevoPedido({ onClose, onCreate, rules }) {
 
       <form onSubmit={submit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(215px,1fr))', gap: 14 }}>
         <label>
-          <span style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: 'var(--on-surface-variant)', marginBottom: 6 }}>Servicio</span>
+          <span style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: 'var(--on-surface-variant)', marginBottom: 6 }}>Tipo de Servicio</span>
           <select value={form.service_type} onChange={set('service_type')} style={{ width: '100%', height: 52, padding: '0 14px', borderRadius: 'var(--sh-sm)', background: 'var(--surface-lowest)', border: '1px solid var(--outline-variant)', fontSize: 14.5, fontWeight: 600 }}>
             {Object.entries(SERVICE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
           </select>
         </label>
+
+        {form.service_type === 'taxi' && (
+          <label>
+            <span style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: 'var(--on-surface-variant)', marginBottom: 6 }}>Servicio Especial (Taxi)</span>
+            <select value={form.servicio_especial} onChange={set('servicio_especial')} style={{ width: '100%', height: 52, padding: '0 14px', borderRadius: 'var(--sh-sm)', background: 'var(--surface-lowest)', border: '1px solid var(--outline-variant)', fontSize: 14.5, fontWeight: 600 }}>
+              <option value="ninguno">Ninguno (Estándar)</option>
+              <option value="polarizado">Vidrios polarizados</option>
+              <option value="bodega">Con bodega / Maletas</option>
+            </select>
+          </label>
+        )}
+
         <Field required label="Cliente" icon="person" placeholder="Nombre de quien pide" value={form.contact_name} onChange={set('contact_name')} />
         <Field required label="Celular" icon="call" type="tel" placeholder="315 792 4906" value={form.contact_phone} onChange={set('contact_phone')} />
         <Field required label="Recoger en" icon="trip_origin" placeholder="Dirección de origen" value={form.pickup_address} onChange={set('pickup_address')} />
         <Field required label="Entregar en" icon="location_on" placeholder="Dirección de destino" value={form.dropoff_address} onChange={set('dropoff_address')} />
-        <Field required label="Distancia (km)" icon="straighten" type="number" placeholder="3" value={form.distance_km} onChange={set('distance_km')} />
+        <Field required label="Distancia estimada (km)" icon="straighten" type="number" step="0.1" placeholder="3" value={form.distance_km} onChange={set('distance_km')} />
 
-        <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', padding: 14, borderRadius: 'var(--sh-md)', background: 'var(--surface-container)' }}>
-          <button type="button" onClick={() => setForm((f) => ({ ...f, turbo: !f.turbo }))} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 800, color: form.turbo ? 'var(--tertiary)' : 'var(--on-surface-variant)' }}>
-            <Icon name={form.turbo ? 'check_box' : 'check_box_outline_blank'} size={20} fill={form.turbo} />
-            <Icon name="bolt" size={17} fill /> Domix Turbo
-          </button>
-          <span style={{ flex: 1 }} />
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--on-surface-variant)' }}>Tarifa calculada</span>
-          <span className="dsp" style={{ fontWeight: 800, fontSize: 24 }}>{money(q.total)}</span>
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label>
+            <span style={{ display: 'block', fontSize: 11.5, fontWeight: 800, color: 'var(--on-surface-variant)', marginBottom: 6 }}>
+              Instrucciones Detalladas del Mandado / Encomienda (Visible para el repartidor)
+            </span>
+            <textarea
+              rows={2}
+              placeholder="Ej: Comprar 2 bolsas de leche en la tienda de la esquina y llevarlas al piso 2 apto 201..."
+              value={form.instrucciones_detalladas}
+              onChange={set('instrucciones_detalladas')}
+              style={{
+                width: '100%', padding: '10px 14px', borderRadius: 'var(--sh-sm)',
+                background: 'var(--surface-lowest)', border: '1px solid var(--outline-variant)',
+                fontSize: 13.5, fontFamily: 'inherit', resize: 'vertical',
+              }}
+            />
+          </label>
         </div>
 
-        <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 12 }}>
+        {/* MÓDULO DE TARIFAS: SISTEMA + EDICIÓN MANUAL + DESGLOSE 70/30 */}
+        <div style={{
+          gridColumn: '1 / -1', padding: '16px 18px', borderRadius: 'var(--sh-md)',
+          background: 'var(--surface-container-high)', border: '1px solid var(--outline-variant)',
+          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, alignItems: 'center',
+        }}>
+          {/* Opción Turbo */}
+          <div>
+            <button type="button" onClick={() => setForm((f) => ({ ...f, turbo: !f.turbo }))} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 800, color: form.turbo ? 'var(--tertiary)' : 'var(--on-surface-variant)', background: 'none', border: 'none', cursor: 'pointer' }}>
+              <Icon name={form.turbo ? 'check_box' : 'check_box_outline_blank'} size={20} fill={form.turbo} />
+              <Icon name="bolt" size={17} fill /> Domix Turbo (Prioritario)
+            </button>
+            <div style={{ fontSize: 11, color: 'var(--on-surface-variant)', marginTop: 4 }}>
+              Asigna de inmediato al conductor más cercano
+            </div>
+          </div>
+
+          {/* Tarifa que arroja el sistema */}
+          <div style={{ padding: '8px 14px', borderRadius: 12, background: 'var(--surface)', border: '1px solid var(--outline-variant)' }}>
+            <span style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--on-surface-variant)' }}>
+              Costo arrojado por el sistema:
+            </span>
+            <span className="dsp" style={{ fontWeight: 800, fontSize: 20, color: 'var(--on-surface)' }}>
+              {money(precioSistema)}
+            </span>
+          </div>
+
+          {/* Campo editable de tarifa final */}
+          <div>
+            <label style={{ display: 'block' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--primary)' }}>
+                  Tarifa a Cobrar (Editable):
+                </span>
+                {form.precio_personalizado !== '' && (
+                  <button
+                    type="button"
+                    onClick={() => setForm((f) => ({ ...f, precio_personalizado: '' }))}
+                    style={{ background: 'none', border: 'none', fontSize: 10.5, fontWeight: 700, color: 'var(--tertiary)', cursor: 'pointer' }}
+                  >
+                    ↺ Restaurar sugerido
+                  </button>
+                )}
+              </div>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: 'var(--on-surface-variant)' }}>$</span>
+                <input
+                  type="number"
+                  step="100"
+                  placeholder={String(precioSistema)}
+                  value={form.precio_personalizado}
+                  onChange={set('precio_personalizado')}
+                  style={{
+                    width: '100%', height: 46, padding: '0 12px 0 28px', borderRadius: 'var(--sh-sm)',
+                    background: 'var(--surface-lowest)', border: form.precio_personalizado !== '' ? '2px solid var(--primary)' : '1px solid var(--outline-variant)',
+                    fontSize: 18, fontWeight: 800, color: 'var(--on-surface)',
+                  }}
+                />
+              </div>
+            </label>
+          </div>
+
+          {/* Desglose 70% Repartidor / 30% Domix */}
+          <div style={{
+            gridColumn: '1 / -1', paddingTop: 12, borderTop: '1px dashed var(--outline-variant)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 800, color: 'var(--on-surface-variant)' }}>DESGLOSE DE SERVICIO:</span>
+              <span style={{ padding: '3px 8px', borderRadius: 8, background: 'rgba(95,191,69,0.18)', color: '#2e7d32', fontWeight: 800, fontSize: 12 }}>
+                70% Conductor: {money(parteRepartidor)}
+              </span>
+              <span style={{ padding: '3px 8px', borderRadius: 8, background: 'rgba(59,130,246,0.15)', color: '#1d4ed8', fontWeight: 800, fontSize: 12 }}>
+                30% Domix: {money(parteDomix)}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--on-surface-variant)' }}>Total a liquidar:</span>
+              <span className="dsp" style={{ fontWeight: 800, fontSize: 24, color: 'var(--primary)' }}>
+                {money(precioFinal)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
           {error && <span style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--error)' }}>{error}</span>}
           <span style={{ flex: 1 }} />
           <Button variant="outlined" type="button" onClick={onClose}>Cancelar</Button>
-          <Button type="submit" icon="check" disabled={busy}>{busy ? 'Creando…' : 'Crear pedido'}</Button>
+          <Button type="submit" icon="check" disabled={busy}>{busy ? 'Creando…' : 'Crear pedido con esta tarifa'}</Button>
         </div>
       </form>
     </Card>
